@@ -12,6 +12,10 @@ keyschedule = [
     [0 for i in range(4)] for i in range(44)
 ]
 
+state = [
+    0 for _ in range(16)
+]
+
 #Loads a value based on an index from the various values in memory
 def loadValue(case, index, secIndex=4):
     match case:
@@ -27,11 +31,13 @@ def loadValue(case, index, secIndex=4):
             return constants.text[index]
         case "encryptedtext":
             return constants.encryptedtext[index]
+        case "state":
+            return state[index]
         case _:
             return ValueError
         
 #Loads a vector register from a constant in memory
-def loadVector(case, index, secIndex=0, terciaryIndex=32):
+def loadVector(case, index=0, secIndex=0, terciaryIndex=32):
     match case:
         case "S_BOX":
             return constants.S_BOX[index][secIndex:terciaryIndex]
@@ -45,6 +51,8 @@ def loadVector(case, index, secIndex=0, terciaryIndex=32):
             return constants.text[index:secIndex]
         case "encryptedtext":
             return constants.encryptedtext[index:secIndex]
+        case "state":
+            return state
         case _:
             return ValueError
         
@@ -57,6 +65,8 @@ def storeValue(type, value, index, secIndex=0):
             vregisters[index][secIndex] = value
         case "keyschedule":
             keyschedule[index][secIndex] = value
+        case "state":
+            state[index]
         case _:
             return ValueError
         
@@ -69,5 +79,7 @@ def storeVector(type, vector, index):
             vregisters[index] = vector
         case "keyschedule":
             keyschedule[index] = vector
+        case "state":
+            state = vector
         case _:
             return ValueError
