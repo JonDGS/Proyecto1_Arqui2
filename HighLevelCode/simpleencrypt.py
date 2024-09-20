@@ -34,11 +34,11 @@ def generateKeySchedule():
             currentVector = rotateColumn(currentVector)
             currentVector = substituteBySBox(currentVector)
             rcon = memory.loadVector("RCON", (i-1) // 4)
-            for i in range(4):
-                currentVector[i] = w4[i] ^ currentVector[i] ^ rcon[i]
+            for j in range(4):
+                currentVector[j] = w4[j] ^ currentVector[j] ^ rcon[j]
         else:
-            for i in range(4):
-                currentVector[i] = w4[i] ^ currentVector[i]
+            for j in range(4):
+                currentVector[j] = w4[j] ^ currentVector[j]
         memory.storeVector("keyschedule", currentVector, i)
 
 #Adds the round key to a given state
@@ -101,4 +101,5 @@ def aesEncrypt():
 
     
 aesEncrypt()
+print(memory.state)
 print("Done")
