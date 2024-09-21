@@ -77,13 +77,14 @@ def matrixVectorMultiplication(matrixA, vectorA):
     vectorB = [0 for _ in range(4)]
     for i in range(4):
         for j in range(4):
-            vectorB[i] =+ matrixA[j][i]*vectorA[j]
+            vectorB[i] += (matrixA[j][i]*vectorA[j])
+        vectorB[i] = vectorB[i] % 255
     return vectorB
 
 #Mixes the columns in a given state
 def mixColumns(state):
     for i in range(4):
-        state[i*4:i*4+3] = matrixVectorMultiplication(RGF_matrix, state[i*4: i*4+4])
+        state[i*4:i*4+4] = matrixVectorMultiplication(RGF_matrix, state[i*4: i*4+4])
     return state
 
 #Using the AES algorithm with no padding encrypts a text
