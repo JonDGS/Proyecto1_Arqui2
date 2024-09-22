@@ -40,15 +40,17 @@ subValuesInColumn:
 ;Assume the index for the RCON column is at t0
 getrconbyindex:
     lw $t1, $t0, 0 # Loads RCON value at t0
-    vset $v0, $t1 # Load v0 with a vector full of t1
-    vset $v1, $zero # Loads v1 with a vector full of zeroes
+    vset $v0, $zero # Loads v1 with a vector full of zeroes
     addi $t3, $zero, $ADDR *
-    vst $v1, $t3, 0 # Sets a sector of memory to full zeroes
-    addi $t3, $zero, 0xFF # Loads 0xFF to t3
-    addi $t4, $t3, $t0 # Loads index for mask value
-    sw $t3, $t4, 0 # Stores mask value on memory
-    vld $v1, $ADDR, 0 # Loads mask to v1
-    vand $v0, $v1, $v0 # Loads the correct vector to v0
+    vst $v0, $t3, 0 # Sets a sector of memory to full zeroes
+    sw $t1, $t3, 0 # Loads RCON value a the beginning of v0 in memory
+    vld $v0, $t3, 0 # Loads RCON vector to v0
+    addi $pc, $pc, 4
+
+;;Assumes the index for the column is at t0
+getColumnVector
+    vld $v1, $t0, 0 # Loads vector for round into v1
+    vset
 
 ;Computes the value for w_{i} if the index
 ;is a multiple of 4
@@ -62,10 +64,9 @@ grk_multiple_case:
     lw $t0, $t5, 0 # Restores current index for subValue stage
     addi $t1, $zero, $zero # Loads a 0 to register t1
     addi $t6, $pc, 4 # Loads pc to t6
-    j subValuesInColumn
-    #next instruc
-    
-
+    j subValuesInColumn # SubBytes at column in index t0
+    addi $t6, $pc, 4 # Loads pc to t6
+    j getrconbyindex # Gets an RCON vector an loads it to v0
 
 
 ;Generates a key for a single round
