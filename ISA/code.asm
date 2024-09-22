@@ -8,7 +8,7 @@ rotateColumn:
     sw $t2, $t0, 0 #Stores w-1[1] to first
     sw $t3, $t0, 1 #Stores w-1[2] to second
     sw $t4, $t0, 2 #Stores w-1[3] to third
-    addi $pc, $pc, 4 #Returns to caller function
+    addi $pc, $t6, 4 #Returns to caller function
 
 ;Given a memory index at t0, replace its value with
 ; the corresponding value in the S_BOX
@@ -22,7 +22,7 @@ subValueAtIndex:
     add $t2, $t2, $t3 # Computes t2 + t3 for index in S_BOX
     lw $t2, $t1, 0 # loads value to replace
     sw $t2, $t0, 0 # Stores value to index in memory
-    addi $pc, $pc, 4 #Returns to caller function
+    addi $pc, $t6, 4 #Returns to caller function
 
 subValuesEnd:
     addi $pc, $t6, 4 # Returns to callee
@@ -45,12 +45,19 @@ getrconbyindex:
     vst $v0, $t3, 0 # Sets a sector of memory to full zeroes
     sw $t1, $t3, 0 # Loads RCON value a the beginning of v0 in memory
     vld $v0, $t3, 0 # Loads RCON vector to v0
-    addi $pc, $pc, 4
+    addi $pc, $t6, 4
 
 ;;Assumes the index for the column is at t0
 getColumnVector
     vld $v1, $t0, 0 # Loads vector for round into v1
-    vset
+    vset $v2, 0 # Loads vector full of zeroes
+    addi $t3, $zero, $ADDR * # Loads address for zeroed vector
+    vst $v2, $t3, 0 # Store vector full of zeroes to memory
+    addi $t4, $zero, 0xFFFFFFFF # Loads mask for first column
+    sw $t4, $t3, 0 # Loads mask value to vector in memory
+    vld $v2, $t3, 0 # Load mask vector from memory
+    vand $v1, $v1, $v2 # Computes v1 and v2
+    addi $pc, $t6, 4 # Returns to callee
 
 ;Computes the value for w_{i} if the index
 ;is a multiple of 4
@@ -67,6 +74,17 @@ grk_multiple_case:
     j subValuesInColumn # SubBytes at column in index t0
     addi $t6, $pc, 4 # Loads pc to t6
     j getrconbyindex # Gets an RCON vector an loads it to v0
+    addi $t0, $t0, -4 # Gets index for w_{-4}
+    addi $t6, $pc, 4 # Loads pc to t6
+    j getColumnVector # Computes w_{-4}
+    vset $v3, 0 # Loads v3 with zeroes
+    vadd $v3, $v3, $v2 # Move value of v2 to v3
+    addi $t0, $t0, 4 # Restore t0 to original value
+    addi $t6, $pc, 4 # Loads pc to t6
+    j getColumnVector # Computes w{i}
+    vxor $v4, $v0, $v1 # Computes v0 xor v1
+    vxor $v4, $v4, $v2 # Computes v4 xor v2
+
 
 
 ;Generates a key for a single round
