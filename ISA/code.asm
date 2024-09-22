@@ -33,10 +33,22 @@ subValuesInColumn:
     addi $t3, $zero, 4 # Loads a 4 to register t3
     beq $t2, $t3, subValuesEnd # Given index 4 reached, jump to end of subBytes
     addi $t7, $pc, 4 # Stores caller pc at register t7
-    j subValueAtIndex
-    addi $t1, $t1, 1
-    j subValuesInColumn
-    
+    j subValueAtIndex # Jumps to function subValueAtIndex
+    addi $t1, $t1, 1 # Increases the counter
+    j subValuesInColumn # Recursively calls function
+
+;Assume the index for the RCON column is at t0
+getrconbyindex:
+    lw $t1, $t0, 0 # Loads RCON value at t0
+    vset $v0, $t1 # Load v0 with a vector full of t1
+    vset $v1, $zero # Loads v1 with a vector full of zeroes
+    addi $t3, $zero, $ADDR *
+    vst $v1, $t3, 0 # Sets a sector of memory to full zeroes
+    addi $t3, $zero, 0xFF # Loads 0xFF to t3
+    addi $t4, $t3, $t0 # Loads index for mask value
+    sw $t3, $t4, 0 # Stores mask value on memory
+    vld $v1, $ADDR, 0 # Loads mask to v1
+    vand $v0, $v1, $v0 # Loads the correct vector to v0
 
 ;Computes the value for w_{i} if the index
 ;is a multiple of 4
