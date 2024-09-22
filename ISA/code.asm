@@ -65,6 +65,7 @@ grk_multiple_case:
     addi $t5, $zero, 0x100 # Sets an initial mem address to temp save indexes
     sw $t0, $t5, 0 # Stores current index at mem address $t5
     sw $t1, $t5, 4 # Stores final index at mem address $t5 + 4
+    sw $t6, $t5, 8 # Stores pc of callee at mem address $t5 + 8
     add $t0, $zero, t0 # Loads the current index to t0
     addi $t6, $pc, 4 # Loads pc to t6
     j rotateColumn #Rotate column
@@ -84,20 +85,44 @@ grk_multiple_case:
     j getColumnVector # Computes w{i}
     vxor $v4, $v0, $v1 # Computes v0 xor v1
     vxor $v4, $v4, $v2 # Computes v4 xor v2
+    lw $t0, $t5, 0 # Restores original value of t0
+    lw $t1, $t5, 4 # Restores original value of t1
+    lw $t6, $t5, 8 # Restores original value of t6
+    vst $v4, $t0, 0 # Stores compute for round key
+    addi $t8, $zero, 1 # Loads 1 to register t8
+    addi $pc, $t6, 8 # Returns callee and skips default case
 
+;Computes a vector of a vector without the first 4 elements
+getRestColumnVector:
+    vld $v1, $t0, 0 # Loads vector for round into v1
+    vset $v2, 0 # Loads vector full of zeroes
+    addi $t3, $zero, $ADDR * # Loads address for zeroed vector
+    vst $v2, $t3, 0 # Store vector full of zeroes to memory
+    addi $t4, $zero, 0xFFFFFFFF # Loads mask for first column
+    sw $t4, $t3, 1 # Loads mask value to vector in memory
+    sw $t4, $t3, 2 # Loads mask value to vector in memory
+    sw $t4, $t3, 3 # Loads mask value to vector in memory
+    vld $v2, $t3, 0 # Load mask vector from memory
+    vand $v1, $v1, $v2 # Computes v1 and v2
+    addi $pc, $t6, 4 # Returns to callee
+
+grk_default_case:
+    addi $t5, $zero, 0x100 # Sets an initial mem address to temp save indexes
+    sw $t0, $t5, 0 # Stores current index at mem address $t5
+    sw $t1, $t5, 4 # Stores final index at mem address $t5 + 4
+    sw $t6, $t5, 8 # Stores pc of callee at mem address $t5 + 8
+    
 
 
 ;Generates a key for a single round
-;Uses r1 as main index
+;Uses t1 as main index
 generateRoundKey:
     addi $t2, $zero, 3 #Loads 3 to temporal register
-    and, $t2, t0, t2 #Loads modulo of index for base 4
+    and, $t2, $t0, $t2 #Loads modulo of index for base 4
+    add $t6, $pc, $zero #Loads pc to t6
     beq $zero, $t2, grk_multiple_case
-    addi $t2, $t0, -1 #Loads index for w_i_{-1}
-    vld $v0, $t2, 0 #Loads w_i_{-1} to vr1
-    addi $t3, $t0, -4 #Loads index for w_i_{-4}
-    vld $v1, $t3, 0 #Loads w_i_{-1} to vr2
-    addi $t0, $t0, 1 #Increases index by 1
+    j grk_default_case
+    add $t0, $t0, $t8 #Increases index by the value of t8
     j generateRoundKeysAux
 
 ;If index 44 has been reached
