@@ -135,7 +135,42 @@ generateRoundKey:
 
 
 
+;; Assumes the index for round is at t0
 roundLoop:
+    add $t1, $t0, $zero # temporarily saves t0 to t1
+    j subValueAtIndex # SubBytes at first column
+    addi $t1, $zero, 4 # Increases addresss to reach second column
+    j subValueAtIndex # SubBytes at second column
+    addi $t1, $zero, 4 # Increases addresss to reach third column
+    j subValueAtIndex # SubBytes at third column
+    addi $t1, $zero, 4 # Increases addresss to reach fourth column
+    j subValueAtIndex # SubBytes at fourth column
+    add $t0, t1, $zero # Restores value for t0
+    lw $t1, $t0, 4 # Loads state[1]
+    lw $t2, $t0, 20 # Loads state[5]
+    lw $t3, $t0, 36 # Loads state[9]
+    lw $t4, $t0, 52 # Loads state[13]
+    sw $t1, $t0, 52 # Stores state[1] at pos 13
+    sw $t2, $t0, 4 # Stores state[5] at pos 1
+    sw $t3, $t0, 20 # Stores state[9] at pos 5
+    sw $t4, $t0, 36 # Stores state[13] at pos 9
+    lw $t1, $t0, 8 # Loads state[2]
+    lw $t2, $t0, 24 # Loads state[6]
+    lw $t3, $t0, 40 # Loads state[10]
+    lw $t4, $t0, 56 # Loads state[14]
+    sw $t1, $t0, 40 # Stores state[2] at pos 10
+    sw $t2, $t0, 56 # Stores state[6] at pos 14
+    sw $t3, $t0, 8 # Stores state[10] at pos 2
+    sw $t4, $t0, 24 # Stores state[14] at pos 6
+    lw $t1, $t0, 12 # Loads state[3]
+    lw $t2, $t0, 28 # Loads state[7]
+    lw $t3, $t0, 44 # Loads state[11]
+    lw $t4, $t0, 60 # Loads state[15]
+    sw $t1, $t0, 60 # Stores state[3] at pos 15
+    sw $t2, $t0, 12 # Stores state[7] at pos 3
+    sw $t3, $t0, 28 # Stores state[11] at pos 7
+    sw $t4, $t0, 44 # Stores state[15] at pos 11
+
     
 
 
