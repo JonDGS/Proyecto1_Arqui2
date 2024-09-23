@@ -10,6 +10,17 @@ rotateColumn:
     sw $t4, $t0, 2 #Stores w-1[3] to third
     addi $pc, $t6, 4 #Returns to caller function
 
+;;Loads a vector with the column at t0
+;;Returns vector on v0
+loadColumnVector:
+    lw $t1, $t0, 0 # Loads columns as scalar to register t1
+    vset $v0, 0 # Loads a vector full of zeroes
+    addi $t3, $zero, $ADDR *# Loads address for vector to be temporary saved
+    vst $v0, $t3 # Stores vector full of zeroes to memory
+    sw $t1, $t3, 0 # Saves columns onto vector located at $ADDR
+    vld $v0, $t3 # Loads vector back to register v0
+    #return to callee *
+
 ;Given a memory index at t0, replace its value with
 ; the corresponding value in the S_BOX
 subValueAtIndex:
@@ -66,7 +77,8 @@ grk_multiple_case:
     sw $t0, $t5, 0 # Stores current index at mem address $t5
     sw $t1, $t5, 4 # Stores final index at mem address $t5 + 4
     sw $t6, $t5, 8 # Stores pc of callee at mem address $t5 + 8
-    add $t0, $zero, t0 # Loads the current index to t0
+    lw $t1, $t0, -4 # Loads previous column in current index (copy w{-1} to t1)
+    sw $t1, $t0, 0 # Copies the contents of w{-1} to w{1}
     addi $t6, $pc, 4 # Loads pc to t6
     j rotateColumn #Rotate column
     lw $t0, $t5, 0 # Restores current index for subValue stage
@@ -75,33 +87,38 @@ grk_multiple_case:
     j subValuesInColumn # SubBytes at column in index t0
     addi $t6, $pc, 4 # Loads pc to t6
     j getrconbyindex # Gets an RCON vector an loads it to v0
+    vset $v1, 0 # Zeroes v1
+    vadd $v1, $v0, $v1 # Copy contents of v0 to v1
     addi $t0, $t0, -4 # Gets index for w_{-4}
     addi $t6, $pc, 4 # Loads pc to t6
-    j getColumnVector # Computes w_{-4}
-    vset $v3, 0 # Loads v3 with zeroes
-    vadd $v3, $v3, $v2 # Move value of v2 to v3
+    j loadColumnVector # Computes w_{-4} to v0
+    vset $v2, 0 # Loads v3 with zeroes
+    vadd $v2, $v0, $v2 # Copy v0 value to v2
     addi $t0, $t0, 4 # Restore t0 to original value
     addi $t6, $pc, 4 # Loads pc to t6
-    j getColumnVector # Computes w{i}
-    vxor $v4, $v0, $v1 # Computes v0 xor v1
-    vxor $v4, $v4, $v2 # Computes v4 xor v2
+    j loadColumnVector # Computes w{i} to v0
+    vxor $v3, $v2, $v0 # Computes v0 xor v2 (w-4 xor wi)
+    vxor $v3, $v3, $v1 # Computes v3 xor v1 (v3 xor rcon)
+    addi $t0, $zero, $ADDR * # Computes memory address for v3
+    vst $v3, $t0, 0 # Store v3 in memory
+    lw $t2, $t0, 0 # Loads first column in v3 which is on memory
     lw $t0, $t5, 0 # Restores original value of t0
     lw $t1, $t5, 4 # Restores original value of t1
     lw $t6, $t5, 8 # Restores original value of t6
-    vst $v4, $t0, 0 # Stores compute for round key
-    addi $t8, $zero, 1 # Loads 1 to register t8
+    sw $t2, $t0, 0 # Stores compute for round key
     addi $pc, $t6, 8 # Returns callee and skips default case
 
-;Computes a vector of a vector without the first 4 elements
-getRestColumnVector:
+;Computes a vector of a vector without columns outside index
+;Assumes the index from start of vector determines the column
+;and is stored in t1
+getIndexColumnVector:
     vld $v1, $t0, 0 # Loads vector for round into v1
     vset $v2, 0 # Loads vector full of zeroes
     addi $t3, $zero, $ADDR * # Loads address for zeroed vector
     vst $v2, $t3, 0 # Store vector full of zeroes to memory
     addi $t4, $zero, 0xFFFFFFFF # Loads mask for first column
-    sw $t4, $t3, 1 # Loads mask value to vector in memory
-    sw $t4, $t3, 2 # Loads mask value to vector in memory
-    sw $t4, $t3, 3 # Loads mask value to vector in memory
+    add $t0, $t0, $t1 # Loads index of corresponding column
+    sw $t4, $t0, 0 # Loads mask value to vector in memory
     vld $v2, $t3, 0 # Load mask vector from memory
     vand $v1, $v1, $v2 # Computes v1 and v2
     addi $pc, $t6, 4 # Returns to callee
@@ -111,18 +128,28 @@ grk_default_case:
     sw $t0, $t5, 0 # Stores current index at mem address $t5
     sw $t1, $t5, 4 # Stores final index at mem address $t5 + 4
     sw $t6, $t5, 8 # Stores pc of callee at mem address $t5 + 8
+    lw $t1, $t0, -4 # Loads previous column in current index (copy w{-1} to t1)
+    sw $t1, $t0, 0 # Copies the contents of w{-1} to w{i}
+    addi $t5, $zero, -1 # Loads a -1 in t5
+    mul $t4, $t2, $t5 # Gets negative of i % 4
+    add $t3, $t0, $t4 # Computes i - (i%4)
+    addi $t6, $zero, $pc # Holds current PC in t6
+    j getIndexColumnVector # Compute vector with only w{i}
+    addi $t5, $zero, -1 # Loads a -1 in t5
+    mul $t4, $t2, $t5 # Gets negative of i % 4
+    add $t3, $t0, $t4 # Computes i - (i%4)
     
 
 
 ;Generates a key for a single round
 ;Uses t1 as main index
 generateRoundKey:
-    addi $t2, $zero, 3 #Loads 3 to temporal register
+    addi $t2, $zero, 3 #Loads 3 to temporal register for modulo 4
     and, $t2, $t0, $t2 #Loads modulo of index for base 4
     add $t6, $pc, $zero #Loads pc to t6
     beq $zero, $t2, grk_multiple_case
     j grk_default_case
-    add $t0, $t0, $t8 #Increases index by the value of t8
+    addi $t0, $t0, 1 #Increases index by 1
     j generateRoundKeysAux
 
 ;If index 44 has been reached
