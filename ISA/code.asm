@@ -133,11 +133,31 @@ generateRoundKey:
     addi $t0, $t0, 1 #Increases index by 1
     j generateRoundKeysAux
 
+
+
+roundLoop:
+    
+
+
+;;Given a text and keyschedule, encrypt a text
+encrypt:
+    lw $t0, $zero, $ADDR * # Saves state memory address to t0
+    vld $v0, $t0 # Loads state as a vector to v0
+    lw $t0 $zero, $ADDR * # Saves keySchedule address
+    addi $t0, $t0, 16 $ # Computes address for first round in key schedule
+    vld $v1, $t0 # Loads round 0 key to v1
+    vxor $v1, $v0, $v1 # Operates v0 xor v1 {state(text) xor roundkey(0)}
+    addi $t0, $zero, 1 # Loads counter for rounds
+    addi $t1, $zero, 11 # Loads max rounds
+    add $t6, $pc, $zero #Loads pc to t6
+    j round_loop
+
+
 ;If index 44 has been reached
 ;Continue the algorithm
 generateRoundKeysAux:
     blt $t0, $t1, generateRoundKey #While keyschedule not complete, continue generating
-    j XXX
+    j encrypt
 
 
 ;Generates the round keys
