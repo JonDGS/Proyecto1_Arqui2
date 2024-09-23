@@ -133,6 +133,17 @@ generateRoundKey:
     addi $t0, $t0, 1 #Increases index by 1
     j generateRoundKeysAux
 
+;;Mixes Columns
+;;Assumes t0 holds address for vector
+mixColumns:
+    addi, $t1, $zero, $ADDR # Loads address for matrix
+    vld $v1, $t1, 0 # Loads RGF matrix to register v1
+    vld $v0, $t0, 0 # Loads current state to v0
+    matmul $v3, $v0, $v1 # Computes dot product of v0 dot v1
+    addi $t2, $zero, $ADDR # Loads address to temporary load v3
+    vst $v3, $t2, 0 # Stores v3 in memory
+    lw $t2, $t2, 0 # Loads first column to register t2
+    sw $t2, $t0, 0 # Stores column at t0
 
 
 ;; Assumes the index for round is at t0
@@ -170,6 +181,13 @@ roundLoop:
     sw $t2, $t0, 12 # Stores state[7] at pos 3
     sw $t3, $t0, 28 # Stores state[11] at pos 7
     sw $t4, $t0, 44 # Stores state[15] at pos 11
+    j mixColumns
+    vld $v0, $t0, 0 # Loads state to v0
+    addi $t2, $zero, $ADDR # Loads address of KeySchedule
+    addi $t3, $zero, 4 # Loads a 4 to t3
+    mul $t3, $t3, $t0 # Loads 4*round
+    vld $v1, $t3, 0 # Loads round key
+    vxor $v1, $v0, $v1 # Computes v0 xor v1 (Adds round key)
 
     
 
