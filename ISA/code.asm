@@ -58,18 +58,6 @@ getrconbyindex:
     vld $v0, $t3, 0 # Loads RCON vector to v0
     addi $pc, $t6, 4
 
-;;Assumes the index for the column is at t0
-getColumnVector
-    vld $v1, $t0, 0 # Loads vector for round into v1
-    vset $v2, 0 # Loads vector full of zeroes
-    addi $t3, $zero, $ADDR * # Loads address for zeroed vector
-    vst $v2, $t3, 0 # Store vector full of zeroes to memory
-    addi $t4, $zero, 0xFFFFFFFF # Loads mask for first column
-    sw $t4, $t3, 0 # Loads mask value to vector in memory
-    vld $v2, $t3, 0 # Load mask vector from memory
-    vand $v1, $v1, $v2 # Computes v1 and v2
-    addi $pc, $t6, 4 # Returns to callee
-
 ;Computes the value for w_{i} if the index
 ;is a multiple of 4
 grk_multiple_case:
@@ -108,21 +96,6 @@ grk_multiple_case:
     sw $t2, $t0, 0 # Stores compute for round key
     addi $pc, $t6, 8 # Returns callee and skips default case
 
-;Computes a vector of a vector without columns outside index
-;Assumes the index from start of vector determines the column
-;and is stored in t1
-getIndexColumnVector:
-    vld $v1, $t0, 0 # Loads vector for round into v1
-    vset $v2, 0 # Loads vector full of zeroes
-    addi $t3, $zero, $ADDR * # Loads address for zeroed vector
-    vst $v2, $t3, 0 # Store vector full of zeroes to memory
-    addi $t4, $zero, 0xFFFFFFFF # Loads mask for first column
-    add $t0, $t0, $t1 # Loads index of corresponding column
-    sw $t4, $t0, 0 # Loads mask value to vector in memory
-    vld $v2, $t3, 0 # Load mask vector from memory
-    vand $v1, $v1, $v2 # Computes v1 and v2
-    addi $pc, $t6, 4 # Returns to callee
-
 grk_default_case:
     addi $t5, $zero, 0x100 # Sets an initial mem address to temp save indexes
     sw $t0, $t5, 0 # Stores current index at mem address $t5
@@ -130,14 +103,22 @@ grk_default_case:
     sw $t6, $t5, 8 # Stores pc of callee at mem address $t5 + 8
     lw $t1, $t0, -4 # Loads previous column in current index (copy w{-1} to t1)
     sw $t1, $t0, 0 # Copies the contents of w{-1} to w{i}
-    addi $t5, $zero, -1 # Loads a -1 in t5
-    mul $t4, $t2, $t5 # Gets negative of i % 4
-    add $t3, $t0, $t4 # Computes i - (i%4)
-    addi $t6, $zero, $pc # Holds current PC in t6
-    j getIndexColumnVector # Compute vector with only w{i}
-    addi $t5, $zero, -1 # Loads a -1 in t5
-    mul $t4, $t2, $t5 # Gets negative of i % 4
-    add $t3, $t0, $t4 # Computes i - (i%4)
+    addi $t6, $pc, 4 # Loads pc to t6
+    j loadColumnVector # Loads w{-1} to v0
+    vset $v1, 0 # Zeroes v1
+    vadd $v1, $v0, $v1 # Copies contents of v0 to v1
+    add $t0, $t0, -16 # Computes index for w{i-4}
+    addi $t6, $pc, 4 # Loads pc to t6
+    j loadColumnVector # Loads w{i-4} to v0
+    vxor $v0, $v0, $v1 # Computes v0 xor v1 (w-4 xor w-1)
+    addi $t0, $zero, $ADDR * # Computes memory address for v3
+    vst $v0, $t0, 0 # Store v0 in memory
+    lw $t2, $t0, 0 # Loads first column in v0 which is on memory
+    lw $t0, $t5, 0 # Restores original value of t0
+    lw $t1, $t5, 4 # Restores original value of t1
+    lw $t6, $t5, 8 # Restores original value of t6
+    sw $t2, $t0, 0 # Stores compute for round key
+    addi $pc, $t6, 4 # Returns callee
     
 
 
