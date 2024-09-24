@@ -42,14 +42,14 @@ subValueAtIndex:
     add $t2, $t2, $t3 # Computes t2 + t3 for index in S_BOX
     lw $t2, $t1, 0 # loads value to replace
     sw $t2, $t0, 0 # Stores value to index in memory
-    beq $t14, $zero, subValuesInColumn2 # Assuming callee is gkr
+    beq $t14, $zero, subValuesInColumn2 # Assuming callee is subValuesInColumn
     addi $t13, $zero, 1 #Loads a 1 to t13
-    beq $t14, $t13, XXX # Assuming callee is XXX
+    beq $t14, $t13, round_Loop1 # Assuming callee is round_Loop
     addi $t13, $zero, 2 #Loads a 2 to t13
-    beq $t14, $t13, XXX # Assuming callee is XXX
+    beq $t14, $t13, round_Loop2 # Assuming callee is round_Loop1
     addi $t13, $zero, 3 #Loads a 3 to t13
-    beq $t14, $t13, XXX # Assuming callee is XXX
-    j XXX
+    beq $t14, $t13, round_Loop3 # Assuming callee is round_Loop2
+    j round_Loop4 # Assuming callee is round_Loop3
 
 # Assumes t0 holds address of column
 # Assumes t1 holds the counter for traversing the column
@@ -116,9 +116,8 @@ grk_multiple_case5:
     lw $t1, $t5, 4 # Restores original value of t1
     lw $t6, $t5, 8 # Restores original value of t6
     sw $t2, $t0, 0 # Stores compute for round key
-    addi $t0, $t0, 1 #Increases index by 1
-    blt $t0, $t1, generateRoundKey #While keyschedule not complete, continue generating
-    j encrypt
+    addi $t0, $t0, 1 # Increases index by 1
+    j generateRoundKey # Returns to generateRoundKey
 
 grk_default_case:
     addi $t5, $zero, 0x100 # Sets an initial mem address to temp save indexes
@@ -155,7 +154,6 @@ grk_default_case2:
 generateRoundKey:
     addi $t2, $zero, 3 #Loads 3 to temporal register for modulo 4
     and, $t2, $t0, $t2 #Loads modulo of index for base 4
-    add $t6, $zero, $zero #Loads pc to t6
     beq $zero, $t2, grk_multiple_case
     j grk_default_case
 
@@ -173,18 +171,31 @@ mixColumns:
     vst $v1, $t2, 0 # Stores resulting vector in memory
     lw $t3, $t2, 0 # Loads result to t3
     sw $t3, $t0, 0 # Replaces current column in memory
+    j round_Loop5
 
 
 # Assumes the index for round is at t0
 round_Loop:
     add $t1, $t0, $zero # temporarily saves t0 to t1
+    addi $t14, $zero, 1 # Loads t14 with a 1
     j subValueAtIndex # SubBytes at first column
+
+round_Loop1:
     addi $t1, $zero, 4 # Increases addresss to reach second column
+    addi $t14, $zero, 2 # Loads t14 with a 2
     j subValueAtIndex # SubBytes at second column
+
+round_Loop2:
     addi $t1, $zero, 4 # Increases addresss to reach third column
+    addi $t14, $zero, 3 # Loads t14 with a 3
     j subValueAtIndex # SubBytes at third column
+
+round_Loop3:
     addi $t1, $zero, 4 # Increases addresss to reach fourth column
+    addi $t14, $zero, 4 # Loads t14 with a 4
     j subValueAtIndex # SubBytes at fourth column
+
+round_Loop4:
     add $t0, $t1, $zero # Restores value for t0
     lw $t1, $t0, 4 # Loads state[1]
     lw $t2, $t0, 20 # Loads state[5]
@@ -212,12 +223,16 @@ round_Loop:
     sw $t4, $t0, 44 # Stores state[15] at pos 11
     addi $t1, $zero, 10 # Loads 0 to register t1
     blt $t0, $t1, mixColumns # If round less than 10, mix columns
+    j round_Loop5
+
+round_Loop5:
     addi $t2, $zero, 16 # Loads 16 to memory
     mul $t2, $t2, $t0 # Computes round key address
     vld $v1, $t0, 0 # Loads round key to v0
     addi $t4, $zero, 0x100 # Loads memory address of state
     vld $v2, $t4, 0 # Loads state to register v2
     vxor $v2, $v2, $v1 # Computes roundkey xor state
+    # Calls itself recursively
     end $zero
 
 # Given a text and keyschedule, encrypt a text
@@ -230,7 +245,6 @@ encrypt:
     vxor $v1, $v0, $v1 # Operates v0 xor v1 {state(text) xor roundkey(0)}
     addi $t0, $zero, 1 # Loads counter for rounds
     addi $t1, $zero, 11 # Loads max rounds
-    add $t6, $zero, $zero #Loads pc to t6
     j round_Loop
 
 # Generates the round keys
