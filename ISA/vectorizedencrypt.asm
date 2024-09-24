@@ -2,6 +2,7 @@ start $zero
 j generateRoundKeys
 
 # Rotate values from index to index + 4
+# CHECK ADDRESSES BEFORE DEPLOYING
 rotateColumn:
     lw $t1, $t0, -4 #Loads w-1[0] to $t0
     lw $t2, $t0, -3 #Loads w-1[1] to $t1
