@@ -76,6 +76,7 @@ def get_binary(instructions: list, labels: dict) -> list:
     bin_instr = []
     for i, instr in enumerate(instructions):
         mnemonic = instr[0]
+        
         try:
             instr_type = isa[mnemonic]['type']
             
@@ -146,6 +147,7 @@ def get_i_type(i: int, instruction: list, labels: dict) -> str:
     """
     mnemonic = instruction[0]
     opcode = isa[mnemonic]['opcode']
+    
     '''
     if (mnemonic == XORI):
         rt = get_register(instruction[1])
@@ -158,7 +160,12 @@ def get_i_type(i: int, instruction: list, labels: dict) -> str:
         rs = get_register(instruction[2])
         imm = codec_imm(instruction[3], labels)
 
-    if (mnemonic == BETO or BLT):
+    if (mnemonic == BETO):
+        rs = get_register(instruction[1])
+        rt = get_register(instruction[2])
+        imm = branch_imm(i, instruction[3], labels)
+
+    if (mnemonic == BLT):
         rs = get_register(instruction[1])
         rt = get_register(instruction[2])
         imm = branch_imm(i, instruction[3], labels)
@@ -194,10 +201,14 @@ def get_j_type(instruction: list, labels: dict) -> str:
 
 def codec_imm(imm, labels):
     try:
+        #print('valor del inmediato')
+        #print(imm)
         imm = labels[imm]
         bin_str = to_bin(imm, IMM_SIZE)
+        #print(bin_str)
     except KeyError:
         bin_str = to_bin(imm, IMM_SIZE)
+        #print(bin_str)
 
     return bin_str
 
@@ -208,14 +219,14 @@ def branch_imm(index, label, labels):
         return to_bin(imm, IMM_SIZE)
 
     except KeyError:
-       raise Exception(f'Error: label "{label}" does not exist.')
+       raise Exception(f'Error de branch: label "{label}" does not exist.')
 
 def jump_imm(label, labels):
     try:
         imm = labels[label]
         bin_str = to_bin(imm, ADDR_SIZE)
     except KeyError:
-        raise Exception(f'Error: label "{label}" does not exist.')
+        raise Exception(f'Error de jump: label "{label}" does not exist.')
     return bin_str
 
 def to_bin(num: str, bits:int) -> list:
