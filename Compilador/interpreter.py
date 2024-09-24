@@ -116,24 +116,18 @@ def get_r_type(instruction: list) -> str:
     opcode = isa[mnemonic]['opcode']
     funct = isa[mnemonic]['funct']
 
-    if (mnemonic == ADD or MULT or EDIV or MOD):
+    if (mnemonic == ADD or SUB or MULT or AND):
         rd = get_register(instruction[1])
         rs = get_register(instruction[2])
         rt = get_register(instruction[3])
         shamt = '00000'
     
-    if (mnemonic == VADD or VMUL or VXOR):
+    if (mnemonic == VADD or VMUL or VXOR or VAND):
         rd = get_register(instruction[1])
         rs = get_register(instruction[2])
         rt = get_register(instruction[3])
         shamt = '00000'
 
-    #Falta de buildear
-    if (mnemonic == BOX_REPLACE):
-        rd = get_register(instruction[1])
-        rs = get_register(instruction[2])
-        rt = get_register(instruction[3])
-        shamt = '00000'
 
     '''
     if (mnemonic == SLL or mnemonic == SRL):
@@ -142,8 +136,8 @@ def get_r_type(instruction: list) -> str:
         rt = '0000'
         shamt = to_bin(instruction[3], 5)
     '''
-    #print("R opcode:", opcode, " rs:", rs, " rt:", rt, " rd:", rd, " shamt:", shamt, " funct:", funct)
-    #print("R opcode:", len(opcode), " rs:", len(rs), " rt:", len(rt), " rd:", len(rd), " shamt:", len(shamt), " funct:", len(funct))
+    print("R opcode:", opcode, " rs:", rs, " rt:", rt, " rd:", rd, " shamt:", shamt, " funct:", funct)
+    print("R opcode:", len(opcode), " rs:", len(rs), " rt:", len(rt), " rd:", len(rd), " shamt:", len(shamt), " funct:", len(funct))
     return opcode + rs + rt + rd + shamt + funct
 
 def get_i_type(i: int, instruction: list, labels: dict) -> str:
@@ -159,28 +153,28 @@ def get_i_type(i: int, instruction: list, labels: dict) -> str:
         imm = xori_imm(instruction[3], labels)
     '''
 
-    if (mnemonic == ADDIMM or MULTIMM):
+    if (mnemonic == ADDIMM):
         rt = get_register(instruction[1])
         rs = get_register(instruction[2])
         imm = codec_imm(instruction[3], labels)
 
-    if (mnemonic == BETO):
+    if (mnemonic == BETO or BLT):
         rs = get_register(instruction[1])
         rt = get_register(instruction[2])
         imm = branch_imm(i, instruction[3], labels)
 
-    if (mnemonic == LDIMM):
+    if (mnemonic == STW or LDW):
         rt = get_register(instruction[1])
         rs = get_register(instruction[2])
         imm = codec_imm(instruction[3], labels)
 
-    if (mnemonic == VLDIMM):
+    if (mnemonic == VST or VLD):
         rt = get_register(instruction[1])
         rs = get_register(instruction[2])
         imm = codec_imm(instruction[3], labels)
 
-    #print("I opcode:", opcode, " rs:", rs, " imm:", imm)
-    #print("I opcode:", len(opcode), " rs:", len(rs), " imm:", len(imm))
+    print("I opcode:", opcode, " rs:", rs, " imm:", imm)
+    print("I opcode:", len(opcode), " rs:", len(rs), " imm:", len(imm))
     return opcode + rs + rt + imm
 
 def get_j_type(instruction: list, labels: dict) -> str:
@@ -191,8 +185,8 @@ def get_j_type(instruction: list, labels: dict) -> str:
     opcode = isa[mnemonic]['opcode']
     addr = jump_imm(instruction[1], labels)
 
-    #print("J opcode:", addr, " addr:")
-    #print("J opcode:", len(opcode), " addr:", len(addr))
+    print("J opcode:", addr, " addr:")
+    print("J opcode:", len(opcode), " addr:", len(addr))
     return opcode + addr
 
 #-----------------------------------------------------------------------

@@ -58,39 +58,39 @@ isa = {
     
     # Escalares
 
-    ADD: {'type': R, 'opcode': '000000', 'funct': '000000'},  #traducido
-    SUB : {'type': R, 'opcode': '000000', 'funct': '000001'}, #trad
-    ADDIMM: {'type': I, 'opcode': '010000'},  #trad
+    ADD: {'type': R, 'opcode': '000000', 'funct': '000000'},  #trad / listo
+    SUB : {'type': R, 'opcode': '000000', 'funct': '000001'}, #trad / listo
+    ADDIMM: {'type': I, 'opcode': '010000'},  #trad / listo
      
 
     #sin estructura
     SHIFTLL : {'type': R, 'opcode': '000000', 'funct': '100000'},  
     SHIFTRL: {'type': R, 'opcode': '000000', 'funct': '100000'},  
     XOR: {'type': R, 'opcode': '000000', 'funct': '100000'},  
-    AND: {'type': R, 'opcode': '000000', 'funct': '100000'},  
-    MULT: {'type': R, 'opcode': '000000', 'funct': '100000'},  
+    AND: {'type': R, 'opcode': '000000', 'funct': '100000'},  #  / listo
+    MULT: {'type': R, 'opcode': '000000', 'funct': '100000'}, #  / listo
 
-    BETO: {'type': I, 'opcode': '100000'}, #trad 
-    BLT: {'type': I, 'opcode': '100001'}, #trad
-    STW: {'type': I, 'opcode': '010001'}, #trad
-    LDW: {'type': I, 'opcode': '010010'}, #trad
-    JMP: {'type': J, 'opcode': '100010'}, #trad
+    BETO: {'type': I, 'opcode': '100000'}, #trad / listo
+    BLT: {'type': I, 'opcode': '100001'}, #trad / listo
+    STW: {'type': I, 'opcode': '010001'}, #trad / listo
+    LDW: {'type': I, 'opcode': '010010'}, #trad / listo
+    JMP: {'type': J, 'opcode': '100010'}, #trad 
 
     # Vectoriales
 
-    VSET: {'type': I, 'opcode': '010100', 'funct': '100000'},
-    VADD: {'type': R, 'opcode': '001100', 'funct': '000000'}, #trad
-    VMUL: {'type': R, 'opcode': '001100', 'funct': '000010'}, #trad
+    VSET: {'type': I, 'opcode': '010100'},
+    VADD: {'type': R, 'opcode': '001100', 'funct': '000000'}, #trad / listo
+    VMUL: {'type': R, 'opcode': '001100', 'funct': '000010'}, #trad / listo
     VSUM: {'type': R, 'opcode': '010100', 'funct': '100000'}, 
 
     #sin estructura
     VSHIFTLL: {'type': R, 'opcode': '010100', 'funct': '100000'},
     VSHIFTRL: {'type': R, 'opcode': '010100', 'funct': '100000'},
-    VXOR: {'type': R, 'opcode': '010100', 'funct': '100000'},
-    VAND: {'type': R, 'opcode': '010100', 'funct': '100000'},
+    VXOR: {'type': R, 'opcode': '010100', 'funct': '100000'}, #  / listo
+    VAND: {'type': R, 'opcode': '010100', 'funct': '100000'}, #  / listo
 
-    VST: {'type': I, 'opcode': '011101'}, #trad
-    VLD: {'type': I, 'opcode': '011110'}, #trad
+    VST: {'type': I, 'opcode': '011101'}, #trad / listo
+    VLD: {'type': I, 'opcode': '011110'}, #trad / listo
 
 }
 
