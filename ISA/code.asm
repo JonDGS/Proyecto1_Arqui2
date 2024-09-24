@@ -22,11 +22,13 @@ loadColumnVector:
     vst $v0, $t3, 0 # Stores vector full of zeroes to memory
     sw $t1, $t3, 0 # Saves columns onto vector located at $ADDR
     vld $v0, $t3, 0 # Loads vector back to register v0
+    beq $t14, $zero, grk_multiple_case4 # Assumes callee is grk_multiple_case3
     addi $t13, $zero, 1 # Loads a 1 to t13
-    addi $t12, $zero, 2 # Loads a 2 rto t12
-    beq $t14, $zero, grk_multiple_case3 # Assumes callee is grk_multiple_case
-    beq $t14, $t13, grk_multiple_case4 # Assumes callee is grk_multiple_case3
-    beq $t14, $t12, grk_multiple_case5 # Assumes calle is grk_multiple_case4
+    beq $t14, $t13, grk_multiple_case5 # Assumes callee is grk_multiple_case4
+    addi $t13, $zero, 2 # Loads a 2 to t13
+    beq $t14, $t13, grk_default_case1 # Assumes calle is grk_default_case
+    addi $t13, $zero, 3 # Loads a 3 to t13
+    beq $t14, $t13, grk_default_case2 # Assumes calle is grk_default_case1
 
 #Given a memory index at t0, replace its value with
 # the corresponding value in the S_BOX
@@ -40,13 +42,13 @@ subValueAtIndex:
     add $t2, $t2, $t3 # Computes t2 + t3 for index in S_BOX
     lw $t2, $t1, 0 # loads value to replace
     sw $t2, $t0, 0 # Stores value to index in memory
-    addi $t13, $zero, 1 #Loads a 1 to t13
-    addi $t12, $zero, 2 #Loads a 2 to t12
-    addi $t11, $zero, 3 #Loads a 3 to t11
     beq $t14, $zero, subValuesInColumn2 # Assuming callee is gkr
+    addi $t13, $zero, 1 #Loads a 1 to t13
     beq $t14, $t13, XXX # Assuming callee is XXX
-    beq $t14, $t12, XXX # Assuming callee is XXX
-    beq $t14, $t11, XXX # Assuming callee is XXX
+    addi $t13, $zero, 2 #Loads a 2 to t13
+    beq $t14, $t13, XXX # Assuming callee is XXX
+    addi $t13, $zero, 3 #Loads a 3 to t13
+    beq $t14, $t13, XXX # Assuming callee is XXX
     j XXX
 
 # Assumes t0 holds address of column
@@ -94,14 +96,14 @@ grk_multiple_case3:
     vset $v1, 0 # Zeroes v1
     vadd $v1, $v0, $v1 # Copy contents of v0 to v1
     addi $t0, $t0, -4 # Gets index for w_{-4}
-    addi $t14, $zero, 1 # Loads 0 to t14
+    addi $t14, $zero, 0 # Loads 0 to t14
     j loadColumnVector # Computes w_{-4} to v0
 
 grk_multiple_case4:
     vset $v2, 0 # Loads v3 with zeroes
     vadd $v2, $v0, $v2 # Copy v0 value to v2
     addi $t0, $t0, 4 # Restore t0 to original value
-    addi $t14, $zero, 2 # Loads 0 to t14
+    addi $t14, $zero, 1 # Loads 1 to t14
     j loadColumnVector # Computes w{i} to v0
 
 grk_multiple_case5:
@@ -125,14 +127,14 @@ grk_default_case:
     sw $t6, $t5, 8 # Stores pc of callee at mem address $t5 + 8
     lw $t1, $t0, -4 # Loads previous column in current index (copy w{-1} to t1)
     sw $t1, $t0, 0 # Copies the contents of w{-1} to w{i}
-    addi $t14, $zero, $zero # Loads 0 to t14
+    addi $t14, $zero, 2 # Loads 2 to t14
     j loadColumnVector # Loads w{-1} to v0
 
 grk_default_case1:
     vset $v1, 0 # Zeroes v1
     vadd $v1, $v0, $v1 # Copies contents of v0 to v1
     addi $t0, $t0, -16 # Computes index for w{i-4}
-    addi $t14, $zero, 1 # Loads 1 to t14
+    addi $t14, $zero, 3 # Loads 3 to t14
     j loadColumnVector # Loads w{i-4} to v0
 
 grk_default_case2:
