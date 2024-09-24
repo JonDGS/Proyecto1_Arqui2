@@ -18,7 +18,7 @@ rotateColumn:
 loadColumnVector:
     lw $t1, $t0, 0 # Loads columns as scalar to register t1
     vset $v0, 0 # Loads a vector full of zeroes
-    addi $t3, $zero, 0x200# Loads address for vector to be temporary saved
+    addi $t3, $zero, 0x169 # Loads address for vector to be temporary saved
     vst $v0, $t3, 0 # Stores vector full of zeroes to memory
     sw $t1, $t3, 0 # Saves columns onto vector located at $ADDR
     vld $v0, $t3, 0 # Loads vector back to register v0
@@ -66,7 +66,7 @@ subValuesInColumn2:
 getrconbyindex:
     lw $t1, $t0, 0 # Loads RCON value at t0
     vset $v0, $zero # Loads v1 with a vector full of zeroes
-    addi $t3, $zero, 0x200
+    addi $t3, $zero, 0x169
     vst $v0, $t3, 0 # Sets a sector of memory to full zeroes
     sw $t1, $t3, 0 # Loads RCON value a the beginning of v0 in memory
     vld $v0, $t3, 0 # Loads RCON vector to v0
@@ -75,7 +75,7 @@ getrconbyindex:
 # Computes the value for w_{i} if the index
 # is a multiple of 4
 grk_multiple_case:
-    addi $t5, $zero, 0x100 # Sets an initial mem address to temp save indexes
+    addi $t5, $zero, 0x15d # Sets an initial mem address to temp save indexes
     sw $t0, $t5, 0 # Stores current index at mem address $t5
     sw $t1, $t5, 4 # Stores final index at mem address $t5 + 4
     sw $t6, $t5, 8 # Stores pc of callee at mem address $t5 + 8
@@ -109,7 +109,7 @@ grk_multiple_case4:
 grk_multiple_case5:
     vxor $v3, $v2, $v0 # Computes v0 xor v2 (w-4 xor wi)
     vxor $v3, $v3, $v1 # Computes v3 xor v1 (v3 xor rcon)
-    addi $t0, $zero, 0x200 # Computes memory address for v3
+    addi $t0, $zero, 0x169 # Computes memory address for v3
     vst $v3, $t0, 0 # Store v3 in memory
     lw $t2, $t0, 0 # Loads first column in v3 which is on memory
     lw $t0, $t5, 0 # Restores original value of t0
@@ -120,7 +120,7 @@ grk_multiple_case5:
     j generateRoundKey # Returns to generateRoundKey
 
 grk_default_case:
-    addi $t5, $zero, 0x100 # Sets an initial mem address to temp save indexes
+    addi $t5, $zero, 0x15d # Sets an initial mem address to temp save indexes
     sw $t0, $t5, 0 # Stores current index at mem address $t5
     sw $t1, $t5, 4 # Stores final index at mem address $t5 + 4
     sw $t6, $t5, 8 # Stores pc of callee at mem address $t5 + 8
@@ -138,7 +138,7 @@ grk_default_case1:
 
 grk_default_case2:
     vxor $v0, $v0, $v1 # Computes v0 xor v1 (w-4 xor w-1)
-    addi $t0, $zero, 0x200 # Computes memory address for v3
+    addi $t0, $zero, 0x169 # Computes memory address for v3
     vst $v0, $t0, 0 # Store v0 in memory
     lw $t2, $t0, 0 # Loads first column in v0 which is on memory
     lw $t0, $t5, 0 # Restores original value of t0
@@ -159,10 +159,10 @@ generateRoundKey:
 
 # Mixes the columns with the Matrix in memory
 mixColumns:
-    addi $t1, $zero, 0x100 # Loads address for matrix
+    addi $t1, $zero, 0x63 # Loads address for matrix
     vld $v0, $t1, 0 # Loads matrix to register v1
     vset $v1, 0 # Zeroes v1
-    addi $t2, $zero, 0x100 # Loads address in memory to be used temporarily
+    addi $t2, $zero, 0x169 # Loads address in memory to be used temporarily
     vst $v1, $t2, 0 # Stores zeroed vector to memory
     lw $t3, $t0, 0 # Loads current column to register t3
     sw $t3, $t2, 0 # Stores current column to memory
@@ -229,17 +229,18 @@ round_Loop5:
     addi $t2, $zero, 16 # Loads 16 to memory
     mul $t2, $t2, $t0 # Computes round key address
     vld $v1, $t0, 0 # Loads round key to v0
-    addi $t4, $zero, 0x100 # Loads memory address of state
+    addi $t4, $zero, 0x485 # Loads memory address of state
     vld $v2, $t4, 0 # Loads state to register v2
     vxor $v2, $v2, $v1 # Computes roundkey xor state
-    # Calls itself recursively
+    addi $t0, $t0, 1 # Increases round by 1
+    blt $t0, $t1, round_Loop
     end $zero
 
 # Given a text and keyschedule, encrypt a text
 encrypt:
-    lw $t0, $zero, 0x200 # Saves state memory address to t0
+    lw $t0, $zero, 0x485 # Saves state memory address to t0
     vld $v0, $t0, 0 # Loads state as a vector to v0
-    lw $t0 $zero, 0x200 # Saves keySchedule address
+    lw $t0 $zero, 0x0 # Saves keySchedule address
     addi $t0, $t0, 16 # Computes address for first round in key schedule
     vld $v1, $t0, 0 # Loads round 0 key to v1
     vxor $v1, $v0, $v1 # Operates v0 xor v1 {state(text) xor roundkey(0)}
