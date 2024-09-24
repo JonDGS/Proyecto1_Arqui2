@@ -1,3 +1,6 @@
+start $zero
+j generateRoundKeys
+
 # Rotate values from index to index + 4
 rotateColumn:
     lw $t1, $t0, -4 #Loads w-1[0] to $t0
@@ -8,7 +11,7 @@ rotateColumn:
     sw $t2, $t0, 0 #Stores w-1[1] to first
     sw $t3, $t0, 1 #Stores w-1[2] to second
     sw $t4, $t0, 2 #Stores w-1[3] to third
-    addi $zero, $t6, 4 #Returns to caller function
+    j grk_multiple_case1
 
 #Loads a vector with the column at t0
 #Returns vector on v0
@@ -33,18 +36,20 @@ subValueAtIndex:
     add $t2, $t2, $t3 # Computes t2 + t3 for index in S_BOX
     lw $t2, $t1, 0 # loads value to replace
     sw $t2, $t0, 0 # Stores value to index in memory
-    addi $zero, $t6, 4 #Returns to caller function
-
-subValuesEnd:
-    addi $zero, $t6, 4 # Returns to callee
+    beq $t14, $zero, subValuesInColumn2 # Assuming callee is gkr
+    beq $t14, $zero, XXX
+    beq $t14, $zero, XXX
+    beq $t14, $zero, XXX
+    j 
 
 # Assumes t0 holds address of column
 # Assumes t1 holds the counter for traversing the column
 subValuesInColumn:
     addi $t3, $zero, 4 # Loads a 4 to register t3
-    beq $t2, $t3, subValuesEnd # Given index 4 reached, jump to end of subBytes
-    addi $t7, $zero, 4 # Stores caller pc at register t7
+    beq $t2, $t3, grk_multiple_case2 # Given index 4 reached, jump to end of subBytes
     j subValueAtIndex # Jumps to function subValueAtIndex
+
+subValuesInColumn2:
     addi $t1, $t1, 1 # Increases the counter
     j subValuesInColumn # Recursively calls function
 
@@ -56,7 +61,7 @@ getrconbyindex:
     vst $v0, $t3, 0 # Sets a sector of memory to full zeroes
     sw $t1, $t3, 0 # Loads RCON value a the beginning of v0 in memory
     vld $v0, $t3, 0 # Loads RCON vector to v0
-    addi $zero, $t6, 4
+    j grk_multiple_case3
 
 # Computes the value for w_{i} if the index
 # is a multiple of 4
@@ -67,24 +72,30 @@ grk_multiple_case:
     sw $t6, $t5, 8 # Stores pc of callee at mem address $t5 + 8
     lw $t1, $t0, -4 # Loads previous column in current index (copy w{-1} to t1)
     sw $t1, $t0, 0 # Copies the contents of w{-1} to w{1}
-    addi $t6, $zero, 4 # Loads pc to t6
     j rotateColumn #Rotate column
+
+grk_multiple_case1:
     lw $t0, $t5, 0 # Restores current index for subValue stage
     add $t1, $zero, $zero # Loads a 0 to register t1
-    addi $t6, $zero, 4 # Loads pc to t6
+    addi $t14, $zero, 0 # Loads condition
     j subValuesInColumn # SubBytes at column in index t0
-    addi $t6, $zero, 4 # Loads pc to t6
+
+grk_multiple_case2:
     j getrconbyindex # Gets an RCON vector an loads it to v0
+
+grk_multiple_case3:
     vset $v1, 0 # Zeroes v1
     vadd $v1, $v0, $v1 # Copy contents of v0 to v1
     addi $t0, $t0, -4 # Gets index for w_{-4}
-    addi $t6, $zero, 4 # Loads pc to t6
     j loadColumnVector # Computes w_{-4} to v0
+
+grk_multiple_case4:
     vset $v2, 0 # Loads v3 with zeroes
     vadd $v2, $v0, $v2 # Copy v0 value to v2
     addi $t0, $t0, 4 # Restore t0 to original value
-    addi $t6, $zero, 4 # Loads pc to t6
     j loadColumnVector # Computes w{i} to v0
+
+grk_multiple_case5:
     vxor $v3, $v2, $v0 # Computes v0 xor v2 (w-4 xor wi)
     vxor $v3, $v3, $v1 # Computes v3 xor v1 (v3 xor rcon)
     addi $t0, $zero, 0x200 # Computes memory address for v3
@@ -94,7 +105,9 @@ grk_multiple_case:
     lw $t1, $t5, 4 # Restores original value of t1
     lw $t6, $t5, 8 # Restores original value of t6
     sw $t2, $t0, 0 # Stores compute for round key
-    addi $zero, $t6, 8 # Returns callee and skips default case
+    addi $t0, $t0, 1 #Increases index by 1
+    blt $t0, $t1, generateRoundKey #While keyschedule not complete, continue generating
+    j encrypt
 
 grk_default_case:
     addi $t5, $zero, 0x100 # Sets an initial mem address to temp save indexes
@@ -118,7 +131,9 @@ grk_default_case:
     lw $t1, $t5, 4 # Restores original value of t1
     lw $t6, $t5, 8 # Restores original value of t6
     sw $t2, $t0, 0 # Stores compute for round key
-    addi $zero, $t6, 4 # Returns callee
+    addi $t0, $t0, 1 #Increases index by 1
+    blt $t0, $t1, generateRoundKey #While keyschedule not complete, continue generating
+    j encrypt
 
 # Generates a key for a single round
 # Uses t1 as main index
@@ -128,8 +143,6 @@ generateRoundKey:
     add $t6, $zero, $zero #Loads pc to t6
     beq $zero, $t2, grk_multiple_case
     j grk_default_case
-    addi $t0, $t0, 1 #Increases index by 1
-    j generateRoundKeysAux
 
 # Mixes the columns with the Matrix in memory
 mixColumns:
@@ -190,6 +203,7 @@ round_Loop:
     addi $t4, $zero, 0x100 # Loads memory address of state
     vld $v2, $t4, 0 # Loads state to register v2
     vxor $v2, $v2, $v1 # Computes roundkey xor state
+    end $zero
 
 # Given a text and keyschedule, encrypt a text
 encrypt:
@@ -204,14 +218,8 @@ encrypt:
     add $t6, $zero, $zero #Loads pc to t6
     j round_Loop
 
-# If index 44 has been reached
-# Continue the algorithm
-generateRoundKeysAux:
-    blt $t0, $t1, generateRoundKey #While keyschedule not complete, continue generating
-    j encrypt
-
 # Generates the round keys
 generateRoundKeys:
     addi $t0, $zero, 4 #Loads initial index
     addi $t1, $zero, 44 #Loads final index to compare to
-    j generateRoundKeysAux
+    j generateRoundKey
