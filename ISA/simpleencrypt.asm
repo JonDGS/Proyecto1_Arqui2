@@ -107,13 +107,9 @@ grk_multiple_case3:
 grk_multiple_case4:
     vset $v2, 0 # Loads v3 with zeroes
     vadd $v2, $v0, $v2 # Copy v0 value to v2
-    addi $t0, $t0, 4 # Restore t0 to original value
-    addi $t14, $zero, 1 # Loads 1 to t14
-    j loadColumnVector # Computes w{i} to v0
 
 grk_multiple_case5:
-    vxor $v3, $v2, $v0 # Computes v0 xor v2 (w-4 xor wi)
-    vxor $v3, $v3, $v1 # Computes v3 xor v1 (v3 xor rcon)
+    lw $t4, 
     addi $t0, $zero, 0x169 # Computes memory address for v3
     vst $v3, $t0, 0 # Store v3 in memory
     lw $t2, $t0, 0 # Loads first column in v3 which is on memory
