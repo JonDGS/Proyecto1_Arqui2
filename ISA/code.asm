@@ -165,7 +165,7 @@ mixColumns:
     addi $t2, $zero, 0x100 # Loads address in memory to be used temporarily
     vst $v1, $t2, 0 # Stores zeroed vector to memory
     lw $t3, $t0, 0 # Loads current column to register t3
-    st $t3, $t2, 0 # Stores current column to memory
+    sw $t3, $t2, 0 # Stores current column to memory
     vld $v1, $t2, 0 # Brings vector of current column and zeroes
     vmul $v1, $v0, $v1 # Matrix multiplication of v0 and v1
     vst $v1, $t2, 0 # Stores resulting vector in memory
