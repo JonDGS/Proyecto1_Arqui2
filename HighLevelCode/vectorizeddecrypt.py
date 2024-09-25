@@ -103,7 +103,7 @@ def mixColumns(state):
     return state
 
 #Using the AES algorithm with no padding encrypts a text
-def aesDencrypt():
+def aesDecrypt():
     loadKeyToMemory()
     generateKeySchedule()
     memory.state = encryptedtext
@@ -116,6 +116,6 @@ def aesDencrypt():
         memory.state = addRoundKey(memory.state, round)
 
     
-aesDencrypt()
+aesDecrypt()
 print(memory.state)
 print("Done")
