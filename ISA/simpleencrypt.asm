@@ -154,26 +154,48 @@ grk_default_case:
     sw $t6, $t5, 8 # Stores pc of callee at mem address $t5 + 8
     lw $t1, $t0, -4 # Loads previous column in current index (copy w{-1} to t1)
     sw $t1, $t0, 0 # Copies the contents of w{-1} to w{i}
-    addi $t14, $zero, 2 # Loads 2 to t14
-    j loadColumnVector # Loads w{-1} to v0
-
-grk_default_case1:
-    vset $v1, 0 # Zeroes v1
-    vadd $v1, $v0, $v1 # Copies contents of v0 to v1
-    addi $t0, $t0, -16 # Computes index for w{i-4}
-    addi $t14, $zero, 3 # Loads 3 to t14
-    j loadColumnVector # Loads w{i-4} to v0
-
-grk_default_case2:
-    vxor $v0, $v0, $v1 # Computes v0 xor v1 (w-4 xor w-1)
-    addi $t0, $zero, 0x169 # Computes memory address for v3
-    vst $v0, $t0, 0 # Store v0 in memory
-    lw $t2, $t0, 0 # Loads first column in v0 which is on memory
+    lw $t4, $t0, 0 # Loads column wi
+    addi $t9, $zero, 24
+    srl $t4, $t4, $t9 # Loads column wi[0]
+    lw $t5, $t0, -16 # Loads column wi-4
+    srl $t5, $t5, $t9 # Loads column wi-4[0]
+    xor $t6, $t4, $t5 # wi[0] xor wi-4[0]
+    sll $t6, $t6, $t9 # Moves it to the beginning of t6
+    add $t7, $t6, $zero # Copies result to t7
+    lw $t4, $t0, 0 # Loads column wi
+    addi $t9, $zero, 16
+    srl $t4, $t4, $t9 # Loads column wi[1]
+    addi $t8, $zero, 0xFF # Loads mask
+    and $t4, $t4, $t8 # Loads LSB 2 bytes of t4
+    lw $t5, $t0, -16 # Loads column wi-4
+    srl $t5, $t5, $t9 # Loads column wi-4[1]
+    and $t5, $t5, $t8 # Loads LSB 2 bytes of t5
+    xor $t6, $t4, $t5 # wi[1] xor wi-4[1]
+    sll $t6, $t6, $t9 # Shifts result to front
+    add $t7, $t7, $t6 # Pushes result to second pos
+    lw $t4, $t0, 0 # Loads column wi
+    addi $t9, $zero, 8
+    srl $t4, $t4, $t9 # Loads column wi[2]
+    addi $t8, $zero, 0xFF # Loads mask
+    and $t4, $t4, $t8 # Loads LSB 2 bytes of t4
+    lw $t5, $t0, -16 # Loads column wi-4
+    srl $t5, $t5, $t9 # Loads column wi-4[2]
+    and $t5, $t5, $t8 # Loads LSB 2 bytes of t5
+    xor $t6, $t4, $t5 # wi[2] xor wi-4[2]
+    sll $t6, $t6, $t9 # Shifts result to front
+    add $t7, $t7, $t6 # Pushes result to third pos
+    lw $t4, $t0, 0 # Loads column wi
+    addi $t8, $zero, 0xFF # Loads mask
+    and $t4, $t4, $t8 # Loads LSB 2 bytes of t4
+    lw $t5, $t0, -16 # Loads column wi-4
+    and $t5, $t5, $t8 # Loads LSB 2 bytes of t5
+    xor $t6, $t4, $t5 # wi[3] xor wi-4[3]
+    add $t7, $t7, $t6 # Pushes result to last pos
+    sw $t7, $t0, 0 # Store result in wi pos
     lw $t0, $t5, 0 # Restores original value of t0
     lw $t1, $t5, 4 # Restores original value of t1
     lw $t6, $t5, 8 # Restores original value of t6
-    sw $t2, $t0, 0 # Stores compute for round key
-    addi $t0, $t0, 1 #Increases index by 1
+    addi $t0, $t0, 1 # Increases index by 1
     blt $t0, $t1, generateRoundKey #While keyschedule not complete, continue generating
     j encrypt
 
