@@ -56,7 +56,7 @@ subValueAtIndex:
 # Assumes t1 holds the counter for traversing the column
 subValuesInColumn:
     addi $t3, $zero, 4 # Loads a 4 to register t3
-    beq $t2, $t3, grk_multiple_case2 # Given index 4 reached, jump to end of subBytes
+    beq $t2, $t3, getrconbyindex # Given index 4 reached, jump to end of subBytes
     j subValueAtIndex # Jumps to function subValueAtIndex
 
 subValuesInColumn2:
@@ -66,28 +66,15 @@ subValuesInColumn2:
 # Assume the index for the RCON column is at t0
 getrconbyindex:
     lw $t1, $t0, 0 # Loads RCON value at t0
-    addi $t2, $zero, 1 # Loads mask for LSB to t2
-    and $t2, $t1, $t2
-    beq $t2, $zero, getrconbyindexhigh # If modulo 2 of column is 0
-    j getrconbyindexlow
-
-getrconbyindexhigh:
-    lw $t2, $t1, 0 # Loads RCON to t2
-    shr $t3, $t2, 16 # Shifts right to get high part
-    j grk_multiple_case3
-
-getrconbyindexlow:
-    lw $t2, $t1, 0 # Loads RCON to t2
-    and $t3, $t2, 255 # AND operation for low part
-    j grk_multiple_case3
+    srl $t3, $t1, 24 # Loads value on high of column
+    j grk_multiple_case2
 
 # Computes the value for w_{i} if the index
 # is a multiple of 4
 grk_multiple_case:
-    addi $t5, $zero, 0x15d # Sets an initial mem address to temp save indexes
+    addi $t5, $zero, 0xc5 # Sets an initial mem address to temp save indexes
     sw $t0, $t5, 0 # Stores current index at mem address $t5
     sw $t1, $t5, 4 # Stores final index at mem address $t5 + 4
-    sw $t6, $t5, 8 # Stores pc of callee at mem address $t5 + 8
     lw $t1, $t0, -4 # Loads previous column in current index (copy w{-1} to t1)
     sw $t1, $t0, 0 # Copies the contents of w{-1} to w{1}
     j rotateColumn #Rotate column
@@ -99,29 +86,50 @@ grk_multiple_case1:
     j subValuesInColumn # SubBytes at column in index t0
 
 grk_multiple_case2:
-    j getrconbyindex # Gets an RCON vector an loads it to v0
-
-grk_multiple_case3:
-    addi $t0, $t0, -4 # Gets index for w_{-4}
-
-grk_multiple_case4:
-    vset $v2, 0 # Loads v3 with zeroes
-    vadd $v2, $v0, $v2 # Copy v0 value to v2
-
-grk_multiple_case5:
-    lw $t4, 
-    addi $t0, $zero, 0x169 # Computes memory address for v3
-    vst $v3, $t0, 0 # Store v3 in memory
-    lw $t2, $t0, 0 # Loads first column in v3 which is on memory
+    lw $t4, $t0, 0 # Loads column wi
+    srl $t4, $t4, 24 # Loads column wi[0]
+    lw $t5, $t0, -16 # Loads column wi-4
+    srl $t5, $t5, 24 # Loads column wi-4[0]
+    xor $t6, $t4, $t5 # wi[0] xor wi-4[0]
+    xor $t6, $t6, $t3 #  wi[0] xor wi-4[0] xor rcon[round]
+    sll $t6, $t6, 24 # Moves it to the beginning of t6
+    add $t7, $t6, $zero # Copies result to t7
+    lw $t4, $t0, 0 # Loads column wi
+    srl $t4, $t4, 16 # Loads column wi[1]
+    addi $t8, $zero, 0xFF # Loads mask
+    and $t4, $t4, $t8 # Loads LSB 2 bytes of t4
+    lw $t5, $t0, -16 # Loads column wi-4
+    srl $t5, $t5, 16 # Loads column wi-4[1]
+    and $t5, $t5, $t8 # Loads LSB 2 bytes of t5
+    xor $t6, $t4, $t5 # wi[1] xor wi-4[1]
+    sll $t6, $t6, 16 # Shifts result to front
+    add $t7, $t7, $t6 # Pushes result to second pos
+    lw $t4, $t0, 0 # Loads column wi
+    srl $t4, $t4, 8 # Loads column wi[2]
+    addi $t8, $zero, 0xFF # Loads mask
+    and $t4, $t4, $t8 # Loads LSB 2 bytes of t4
+    lw $t5, $t0, -16 # Loads column wi-4
+    srl $t5, $t5, 8 # Loads column wi-4[2]
+    and $t5, $t5, $t8 # Loads LSB 2 bytes of t5
+    xor $t6, $t4, $t5 # wi[2] xor wi-4[2]
+    sll $t6, $t6, 8 # Shifts result to front
+    add $t7, $t7, $t6 # Pushes result to third pos
+    lw $t4, $t0, 0 # Loads column wi
+    addi $t8, $zero, 0xFF # Loads mask
+    and $t4, $t4, $t8 # Loads LSB 2 bytes of t4
+    lw $t5, $t0, -16 # Loads column wi-4
+    and $t5, $t5, $t8 # Loads LSB 2 bytes of t5
+    xor $t6, $t4, $t5 # wi[3] xor wi-4[3]
+    add $t7, $t7, $t6 # Pushes result to last pos
+    sw $t7, $t0, 0 # Store result in wi pos
     lw $t0, $t5, 0 # Restores original value of t0
     lw $t1, $t5, 4 # Restores original value of t1
     lw $t6, $t5, 8 # Restores original value of t6
-    sw $t2, $t0, 0 # Stores compute for round key
     addi $t0, $t0, 1 # Increases index by 1
     j generateRoundKey # Returns to generateRoundKey
 
 grk_default_case:
-    addi $t5, $zero, 0x15d # Sets an initial mem address to temp save indexes
+    addi $t5, $zero, 0xc5 # Sets an initial mem address to temp save indexes
     sw $t0, $t5, 0 # Stores current index at mem address $t5
     sw $t1, $t5, 4 # Stores final index at mem address $t5 + 4
     sw $t6, $t5, 8 # Stores pc of callee at mem address $t5 + 8
