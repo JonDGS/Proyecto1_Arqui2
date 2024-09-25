@@ -4,14 +4,28 @@ j generateRoundKeys
 # Rotate values from index to index + 4
 # CHECK ADDRESSES BEFORE DEPLOYING
 rotateColumn:
-    lw $t1, $t0, -4 #Loads w-1[0] to $t0
-    lw $t2, $t0, -3 #Loads w-1[1] to $t1
-    lw $t3, $t0, -2 #Loads w-1[2] to $t2
-    lw $t4, $t0, -1 #Loads w-1[3] to $t3
-    sw $t1, $t0, 3 #Stores w-1[0] to last
-    sw $t2, $t0, 0 #Stores w-1[1] to first
-    sw $t3, $t0, 1 #Stores w-1[2] to second
-    sw $t4, $t0, 2 #Stores w-1[3] to third
+    lw $t0, $t0, 0 
+    addi $t5, $zero, 0xFF
+    addi $t6. $zero, 24
+    srl $t1, $t0, $t6 # Loads column[0]
+    addi $t6. $zero, 16
+    srl $t2, $t0, $t6 # Loads column[1]
+    and $t2, $t0, $t5 # Loads column[1] after mask
+    addi $t6. $zero, 8
+    srl $t3, $t0, $t6 # Loads column[2]
+    and $t3, $t0, $t5 # Loads column[2] after mask
+    and $t4, $t0, $t5 # Loads column[3] after mask
+    addi $t6, $zero, 24 # Mask for first pos
+    sll $t2, $t2, $t6 # Loads t2 to first pos
+    addi $t6, $zero, 16 # Mask for second pos
+    sll $t3, $t3, $t6 # Loads t3 to second pos
+    addi $t6, $zero, 8 # Mask for third pos
+    sll $t4, $t4, $t6 # Loads t4 to third pos
+    add $t7, $zero, $t1
+    add $t7, $t7, $t2
+    add $t7, $t7, $t3
+    add $t7, $t7, $t4
+    sw $t0, $t7, 0
     j grk_multiple_case1
 
 #Loads a vector with the column at t0
@@ -35,7 +49,8 @@ loadColumnVector:
 # the corresponding value in the S_BOX
 subValueAtIndex:
     lw $t1, $t0, 0 # Loads value at memory address
-    srl $t2, $t1, 4 # Shifts value at t1 to get t1 // 16
+    addi $t6, $zero, 4
+    srl $t2, $t1, $t6 # Shifts value at t1 to get t1 // 16
     addi $t3, $zero, 0xF # Loads 0xF mask to t3
     and $t3, $t1, $t3 # Computes t1 % 16 using mask
     addi $t4, $zero, 15 # Loads row amounts for S_BOX
@@ -66,7 +81,8 @@ subValuesInColumn2:
 # Assume the index for the RCON column is at t0
 getrconbyindex:
     lw $t1, $t0, 0 # Loads RCON value at t0
-    srl $t3, $t1, 24 # Loads value on high of column
+    addi $t6, $zero, 24
+    srl $t3, $t1, $t6 # Loads value on high of column
     j grk_multiple_case2
 
 # Computes the value for w_{i} if the index
@@ -87,32 +103,35 @@ grk_multiple_case1:
 
 grk_multiple_case2:
     lw $t4, $t0, 0 # Loads column wi
-    srl $t4, $t4, 24 # Loads column wi[0]
+    addi $t9, $zero, 24
+    srl $t4, $t4, $t9 # Loads column wi[0]
     lw $t5, $t0, -16 # Loads column wi-4
-    srl $t5, $t5, 24 # Loads column wi-4[0]
+    srl $t5, $t5, $t9 # Loads column wi-4[0]
     xor $t6, $t4, $t5 # wi[0] xor wi-4[0]
     xor $t6, $t6, $t3 #  wi[0] xor wi-4[0] xor rcon[round]
-    sll $t6, $t6, 24 # Moves it to the beginning of t6
+    sll $t6, $t6, $t9 # Moves it to the beginning of t6
     add $t7, $t6, $zero # Copies result to t7
     lw $t4, $t0, 0 # Loads column wi
-    srl $t4, $t4, 16 # Loads column wi[1]
+    addi $t9, $zero, 16
+    srl $t4, $t4, $t9 # Loads column wi[1]
     addi $t8, $zero, 0xFF # Loads mask
     and $t4, $t4, $t8 # Loads LSB 2 bytes of t4
     lw $t5, $t0, -16 # Loads column wi-4
-    srl $t5, $t5, 16 # Loads column wi-4[1]
+    srl $t5, $t5, $t9 # Loads column wi-4[1]
     and $t5, $t5, $t8 # Loads LSB 2 bytes of t5
     xor $t6, $t4, $t5 # wi[1] xor wi-4[1]
-    sll $t6, $t6, 16 # Shifts result to front
+    sll $t6, $t6, $t9 # Shifts result to front
     add $t7, $t7, $t6 # Pushes result to second pos
     lw $t4, $t0, 0 # Loads column wi
-    srl $t4, $t4, 8 # Loads column wi[2]
+    addi $t9, $zero, 8
+    srl $t4, $t4, $t9 # Loads column wi[2]
     addi $t8, $zero, 0xFF # Loads mask
     and $t4, $t4, $t8 # Loads LSB 2 bytes of t4
     lw $t5, $t0, -16 # Loads column wi-4
-    srl $t5, $t5, 8 # Loads column wi-4[2]
+    srl $t5, $t5, $t9 # Loads column wi-4[2]
     and $t5, $t5, $t8 # Loads LSB 2 bytes of t5
     xor $t6, $t4, $t5 # wi[2] xor wi-4[2]
-    sll $t6, $t6, 8 # Shifts result to front
+    sll $t6, $t6, $t9 # Shifts result to front
     add $t7, $t7, $t6 # Pushes result to third pos
     lw $t4, $t0, 0 # Loads column wi
     addi $t8, $zero, 0xFF # Loads mask
