@@ -204,7 +204,7 @@ mixColumns:
     vst $v1, $t2, 0 # Stores resulting vector in memory
     lw $t3, $t2, 0 # Loads result to t3
     sw $t3, $t0, 0 # Replaces current column in memory
-    j round_Loop5
+    j addRoundKey
 
 
 # Finishes the program
