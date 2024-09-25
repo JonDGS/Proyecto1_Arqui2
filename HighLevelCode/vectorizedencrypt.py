@@ -70,7 +70,7 @@ def shiftRows(state):
 
 #Multiplies a given matrix by a vector
 def matrixVectorMultiplication(matrixA, vectorA):
-    tmatrix = numpy.matrix_transpose(matrixA)
+    tmatrix = numpy.transpose(matrixA)
     vectorB = numpy.dot(tmatrix, vectorA) % 255
     return vectorB
 
