@@ -239,32 +239,115 @@ round_Loop3:
     j subValueAtIndex # SubBytes at fourth column
 
 round_Loop4:
-    add $t0, $t1, $zero # Restores value for t0
-    lw $t1, $t0, 4 # Loads state[1]
-    lw $t2, $t0, 20 # Loads state[5]
-    lw $t3, $t0, 36 # Loads state[9]
-    lw $t4, $t0, 52 # Loads state[13]
-    sw $t1, $t0, 52 # Stores state[1] at pos 13
-    sw $t2, $t0, 4 # Stores state[5] at pos 1
-    sw $t3, $t0, 20 # Stores state[9] at pos 5
-    sw $t4, $t0, 36 # Stores state[13] at pos 9
-    lw $t1, $t0, 8 # Loads state[2]
-    lw $t2, $t0, 24 # Loads state[6]
-    lw $t3, $t0, 40 # Loads state[10]
-    lw $t4, $t0, 56 # Loads state[14]
-    sw $t1, $t0, 40 # Stores state[2] at pos 10
-    sw $t2, $t0, 56 # Stores state[6] at pos 14
-    sw $t3, $t0, 8 # Stores state[10] at pos 2
-    sw $t4, $t0, 24 # Stores state[14] at pos 6
-    lw $t1, $t0, 12 # Loads state[3]
-    lw $t2, $t0, 28 # Loads state[7]
-    lw $t3, $t0, 44 # Loads state[11]
-    lw $t4, $t0, 60 # Loads state[15]
-    sw $t1, $t0, 60 # Stores state[3] at pos 15
-    sw $t2, $t0, 12 # Stores state[7] at pos 3
-    sw $t3, $t0, 28 # Stores state[11] at pos 7
-    sw $t4, $t0, 44 # Stores state[15] at pos 11
-    addi $t1, $zero, 10 # Loads 0 to register t1
+    #Rotate 2nd row
+    addi $t8, $zero, 0x260 # Loads initial address of state
+    addi $t9, $zero, 16 # Loads 16 for shifts
+    addi $t10, $zero 0xFF # Loads mask
+    lw $t0, $t8, 0 # Loads column
+    srl $t0, $t0, $t9 # Shifts to get second value to LSB
+    and $t0, $t0, $t10 # Apply mask
+    lw $t1, $t8, 4 # Loads column
+    srl $t1, $t1, $t9 # Shifts to get second value to LSB
+    and $t1, $t1, $t10 # Apply mask
+    lw $t2, $t8, 8 # Loads column
+    srl $t2, $t2, $t9 # Shifts to get second value to LSB
+    and $t2, $t2, $t10 # Apply mask
+    lw $t3, $t8, 12 # Loads column
+    srl $t3, $t3, $t9 # Shifts to get second value to LSB
+    and $t3, $t3, $t10 # Apply mask
+    sll $t4, $t1, $t9 # Shifts back in place
+    sll $t5, $t2, $t9 # Shifts back in place
+    sll $t6, $t3, $t9 # Shifts back in place
+    sll $t7, $t0, $t9 # Shifts back in place
+    addi $t10, $zero, 0xFF00FFFF # Changes mask
+    lw $t0, $t8, 0 # Loads state column to t0
+    xor $t0, $t0, $t10 # Applies mask
+    add $t0, $t0, $t4 # Merges current column with result
+    lw $t1, $t8, 4 # Loads state column to t1
+    xor $t1, $t1, $t10 # Applies mask
+    add $t1, $t1, $t5 # Merges current column with result
+    lw $t2, $t8, 8 # Loads state column to t2
+    xor $t2, $t2, $t10 # Applies mask
+    add $t2, $t2, $t6 # Merges current column with result
+    lw $t3, $t8, 12 # Loads state column to t3
+    xor $t3, $t3, $t10 # Applies mask
+    add $t3, $t3, $t7 # Merges current column with result
+    sw $t0, $t8, 0 # Saves first column result
+    sw $t1, $t8, 4 # Saves second column result
+    sw $t2, $t8, 8 # Saves third column result
+    sw $t3, $t8, 12 # Saves fourth column result
+    #Rotate third row
+    addi $t9, $zero, 8 # Loads 16 for shifts
+    addi $t10, $zero 0xFF # Loads mask
+    lw $t0, $t8, 0 # Loads column
+    srl $t0, $t0, $t9 # Shifts to get second value to LSB
+    and $t0, $t0, $t10 # Apply mask
+    lw $t1, $t8, 4 # Loads column
+    srl $t1, $t1, $t9 # Shifts to get second value to LSB
+    and $t1, $t1, $t10 # Apply mask
+    lw $t2, $t8, 8 # Loads column
+    srl $t2, $t2, $t9 # Shifts to get second value to LSB
+    and $t2, $t2, $t10 # Apply mask
+    lw $t3, $t8, 12 # Loads column
+    srl $t3, $t3, $t9 # Shifts to get second value to LSB
+    and $t3, $t3, $t10 # Apply mask
+    sll $t4, $t2, $t9 # Shifts back in place
+    sll $t5, $t3, $t9 # Shifts back in place
+    sll $t6, $t0, $t9 # Shifts back in place
+    sll $t7, $t1, $t9 # Shifts back in place
+    addi $t10, $zero, 0xFFFF00FF # Changes mask
+    lw $t0, $t8, 0 # Loads state column to t0
+    xor $t0, $t0, $t10 # Applies mask
+    add $t0, $t0, $t4 # Merges current column with result
+    lw $t1, $t8, 4 # Loads state column to t1
+    xor $t1, $t1, $t10 # Applies mask
+    add $t1, $t1, $t5 # Merges current column with result
+    lw $t2, $t8, 8 # Loads state column to t2
+    xor $t2, $t2, $t10 # Applies mask
+    add $t2, $t2, $t6 # Merges current column with result
+    lw $t3, $t8, 12 # Loads state column to t3
+    xor $t3, $t3, $t10 # Applies mask
+    add $t3, $t3, $t7 # Merges current column with result
+    sw $t0, $t8, 0 # Saves first column result
+    sw $t1, $t8, 4 # Saves second column result
+    sw $t2, $t8, 8 # Saves third column result
+    sw $t3, $t8, 12 # Saves fourth column result
+    # Rotate fourth column
+    addi $t9, $zero, 0 # Loads 16 for shifts
+    addi $t10, $zero 0xFF # Loads mask
+    lw $t0, $t8, 0 # Loads column
+    srl $t0, $t0, $t9 # Shifts to get second value to LSB
+    and $t0, $t0, $t10 # Apply mask
+    lw $t1, $t8, 4 # Loads column
+    srl $t1, $t1, $t9 # Shifts to get second value to LSB
+    and $t1, $t1, $t10 # Apply mask
+    lw $t2, $t8, 8 # Loads column
+    srl $t2, $t2, $t9 # Shifts to get second value to LSB
+    and $t2, $t2, $t10 # Apply mask
+    lw $t3, $t8, 12 # Loads column
+    srl $t3, $t3, $t9 # Shifts to get second value to LSB
+    and $t3, $t3, $t10 # Apply mask
+    sll $t4, $t3, $t9 # Shifts back in place
+    sll $t5, $t0, $t9 # Shifts back in place
+    sll $t6, $t1, $t9 # Shifts back in place
+    sll $t7, $t2, $t9 # Shifts back in place
+    addi $t10, $zero, 0xFFFFFF00 # Changes mask
+    lw $t0, $t8, 0 # Loads state column to t0
+    xor $t0, $t0, $t10 # Applies mask
+    add $t0, $t0, $t4 # Merges current column with result
+    lw $t1, $t8, 4 # Loads state column to t1
+    xor $t1, $t1, $t10 # Applies mask
+    add $t1, $t1, $t5 # Merges current column with result
+    lw $t2, $t8, 8 # Loads state column to t2
+    xor $t2, $t2, $t10 # Applies mask
+    add $t2, $t2, $t6 # Merges current column with result
+    lw $t3, $t8, 12 # Loads state column to t3
+    xor $t3, $t3, $t10 # Applies mask
+    add $t3, $t3, $t7 # Merges current column with result
+    sw $t0, $t8, 0 # Saves first column result
+    sw $t1, $t8, 4 # Saves second column result
+    sw $t2, $t8, 8 # Saves third column result
+    sw $t3, $t8, 12 # Saves fourth column result
     blt $t0, $t1, mixColumns # If round less than 10, mix columns
     j round_Loop5
 
