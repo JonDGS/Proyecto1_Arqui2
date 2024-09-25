@@ -1,5 +1,5 @@
 import memory
-from constants import S_BOX, INV_S_BOX, R_CON, key, text, RGF_matrix
+from constants import key, encryptedtext, Inv_RGF_matrix
 
 #Loads key to first 4 columns, vectors of the scheduler
 def loadKeyToMemory():
@@ -22,7 +22,7 @@ def sbox_convert(value):
 def invsbox_convert(value):
     x_index = value // 16
     y_index = value % 16
-    replacement = memory.loadValue("INV_S_BOX", x_index, secIndex=y_index)
+    replacement = memory.loadValue("INV_BOX", x_index, secIndex=y_index)
     return replacement
 
 #Converts the values in a vector by its values
@@ -60,6 +60,8 @@ def generateKeySchedule():
 def addRoundKey(state, round):
     for i in range(4):
         for j in range(4):
+            temp1 = state[j*4 + i]
+            temp2 = memory.keyschedule[j + round*4][i]
             state[j*4 + i] = state[j*4 + i] ^ memory.keyschedule[j + round*4][i]
     return state
 
@@ -106,14 +108,14 @@ def matrixVectorMultiplication(matrixA, vectorA):
 #Mixes the columns in a given state
 def mixColumns(state):
     for i in range(4):
-        state[i*4:i*4+4] = matrixVectorMultiplication(RGF_matrix, state[i*4: i*4+4])
+        state[i*4:i*4+4] = matrixVectorMultiplication(Inv_RGF_matrix, state[i*4: i*4+4])
     return state
 
 #Using the AES algorithm with no padding encrypts a text
-def aesEncrypt():
+def aesDecrypt():
     loadKeyToMemory()
     generateKeySchedule()
-    memory.state = text
+    memory.state = encryptedtext
     memory.state = addRoundKey(memory.state, 0)
     for round in range(1, 11):
         memory.state = invSubBytes(memory.state)
@@ -123,6 +125,6 @@ def aesEncrypt():
         memory.state = addRoundKey(memory.state, round)
 
     
-aesEncrypt()
+aesDecrypt()
 print(memory.state)
 print("Done")
