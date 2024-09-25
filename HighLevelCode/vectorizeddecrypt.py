@@ -114,8 +114,3 @@ def aesDecrypt():
         if round >= 10:
             memory.state = mixColumns(memory.state)
         memory.state = addRoundKey(memory.state, round)
-
-    
-aesDecrypt()
-print(memory.state)
-print("Done")
