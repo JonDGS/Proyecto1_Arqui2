@@ -28,23 +28,6 @@ rotateColumn:
     sw $t0, $t7, 0
     j grk_multiple_case1
 
-#Loads a vector with the column at t0
-#Returns vector on v0
-loadColumnVector:
-    lw $t1, $t0, 0 # Loads columns as scalar to register t1
-    vset $v0, 0 # Loads a vector full of zeroes
-    addi $t3, $zero, 0x169 # Loads address for vector to be temporary saved
-    vst $v0, $t3, 0 # Stores vector full of zeroes to memory
-    sw $t1, $t3, 0 # Saves columns onto vector located at $ADDR
-    vld $v0, $t3, 0 # Loads vector back to register v0
-    beq $t14, $zero, grk_multiple_case4 # Assumes callee is grk_multiple_case3
-    addi $t13, $zero, 1 # Loads a 1 to t13
-    beq $t14, $t13, grk_multiple_case5 # Assumes callee is grk_multiple_case4
-    addi $t13, $zero, 2 # Loads a 2 to t13
-    beq $t14, $t13, grk_default_case1 # Assumes calle is grk_default_case
-    addi $t13, $zero, 3 # Loads a 3 to t13
-    beq $t14, $t13, grk_default_case2 # Assumes calle is grk_default_case1
-
 #Given a memory index at t0, replace its value with
 # the corresponding value in the S_BOX
 subValueAtIndex:
@@ -228,8 +211,14 @@ mixColumns:
 cest_fini:
     end $zero
 
+# Assumes t0 holds the round index, and t1 holds 11 (11 rounds)
 round_Loop:
+    addi $t3, $zero, 0xCC # First address in DATA
+    lw $t0, $t3, 0 # Restores value of index round
+    lw $t1, $t3, 4 # Restores value of max rounds
     blt $t0, $t1, cest_fini
+    sw $t0, $t3, 0 # Saves index back to memory
+    sw $t1, $t3, 4 # Saves max rounds back to memory
     add $t1, $t0, $zero # temporarily saves t0 to t1
     addi $t14, $zero, 1 # Loads t14 with a 1
     j subValueAtIndex # SubBytes at first column
