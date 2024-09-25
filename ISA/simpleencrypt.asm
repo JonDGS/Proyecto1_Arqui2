@@ -224,8 +224,12 @@ mixColumns:
     j round_Loop5
 
 
-# Assumes the index for round is at t0
+# Finishes the program
+cest_fini:
+    end $zero
+
 round_Loop:
+    blt $t0, $t1, cest_fini
     add $t1, $t0, $zero # temporarily saves t0 to t1
     addi $t14, $zero, 1 # Loads t14 with a 1
     j subValueAtIndex # SubBytes at first column
@@ -283,8 +287,7 @@ round_Loop5:
     vld $v2, $t4, 0 # Loads state to register v2
     vxor $v2, $v2, $v1 # Computes roundkey xor state
     addi $t0, $t0, 1 # Increases round by 1
-    blt $t0, $t1, round_Loop
-    end $zero
+    j round_Loop
 
 # Computes the state xor roundKey
 # Assumes t1 has current round
