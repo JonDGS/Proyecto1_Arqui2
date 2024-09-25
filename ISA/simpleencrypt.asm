@@ -348,18 +348,11 @@ round_Loop4:
     sw $t1, $t8, 4 # Saves second column result
     sw $t2, $t8, 8 # Saves third column result
     sw $t3, $t8, 12 # Saves fourth column result
+    addi $t3, $zero, 0xCC # First address in DATA
+    lw $t0, $t3, 0 # Restores value of index round
+    lw $t1, $t3, 4 # Restores value of max rounds
     blt $t0, $t1, mixColumns # If round less than 10, mix columns
-    j round_Loop5
-
-round_Loop5:
-    addi $t2, $zero, 16 # Loads 16 to memory
-    mul $t2, $t2, $t0 # Computes round key address
-    vld $v1, $t0, 0 # Loads round key to v0
-    addi $t4, $zero, 0x485 # Loads memory address of state
-    vld $v2, $t4, 0 # Loads state to register v2
-    vxor $v2, $v2, $v1 # Computes roundkey xor state
-    addi $t0, $t0, 1 # Increases round by 1
-    j round_Loop
+    j addRoundKey
 
 # Computes the state xor roundKey
 # Assumes t1 has current round
