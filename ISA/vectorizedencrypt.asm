@@ -176,7 +176,7 @@ generateRoundKey:
 
 # Mixes the columns with the Matrix in memory
 mixColumns:
-    addi $t1, $zero, 0x63 # Loads address for matrix
+    addi $t1, $zero, 0xE4 # Loads address for matrix
     vld $v0, $t1, 0 # Loads matrix to register v1
     vset $v1, 0 # Zeroes v1
     addi $t2, $zero, 0x310 # Loads address in memory to be used temporarily
