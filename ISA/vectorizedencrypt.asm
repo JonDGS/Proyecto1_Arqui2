@@ -2,16 +2,29 @@ start $zero
 j generateRoundKeys
 
 # Rotate values from index to index + 4
-# CHECK ADDRESSES BEFORE DEPLOYING
-rotateColumn:
-    lw $t1, $t0, -4 #Loads w-1[0] to $t0
-    lw $t2, $t0, -3 #Loads w-1[1] to $t1
-    lw $t3, $t0, -2 #Loads w-1[2] to $t2
-    lw $t4, $t0, -1 #Loads w-1[3] to $t3
-    sw $t1, $t0, 3 #Stores w-1[0] to last
-    sw $t2, $t0, 0 #Stores w-1[1] to first
-    sw $t3, $t0, 1 #Stores w-1[2] to second
-    sw $t4, $t0, 2 #Stores w-1[3] to third
+# CHECK ADDRESSES BEFORE DEPLOYINGrotateColumn:
+    lw $t0, $t0, 0 
+    addi $t5, $zero, 0xFF
+    addi $t6, $zero, 24
+    srl $t1, $t0, $t6 # Loads column[0]
+    addi $t6, $zero, 16
+    srl $t2, $t0, $t6 # Loads column[1]
+    and $t2, $t0, $t5 # Loads column[1] after mask
+    addi $t6, $zero, 8
+    srl $t3, $t0, $t6 # Loads column[2]
+    and $t3, $t0, $t5 # Loads column[2] after mask
+    and $t4, $t0, $t5 # Loads column[3] after mask
+    addi $t6, $zero, 24 # Mask for first pos
+    sll $t2, $t2, $t6 # Loads t2 to first pos
+    addi $t6, $zero, 16 # Mask for second pos
+    sll $t3, $t3, $t6 # Loads t3 to second pos
+    addi $t6, $zero, 8 # Mask for third pos
+    sll $t4, $t4, $t6 # Loads t4 to third pos
+    add $t7, $zero, $t1
+    add $t7, $t7, $t2
+    add $t7, $t7, $t3
+    add $t7, $t7, $t4
+    sw $t0, $t7, 0
     j grk_multiple_case1
 
 #Loads a vector with the column at t0
@@ -56,7 +69,7 @@ subValueAtIndex:
 # Assumes t1 holds the counter for traversing the column
 subValuesInColumn:
     addi $t3, $zero, 4 # Loads a 4 to register t3
-    beq $t2, $t3, grk_multiple_case2 # Given index 4 reached, jump to end of subBytes
+    beq $t2, $t3, getrconbyindex # Given index 4 reached, jump to end of subBytes
     j subValueAtIndex # Jumps to function subValueAtIndex
 
 subValuesInColumn2:
@@ -67,16 +80,24 @@ subValuesInColumn2:
 getrconbyindex:
     lw $t1, $t0, 0 # Loads RCON value at t0
     vset $v0, $zero # Loads v1 with a vector full of zeroes
-    addi $t3, $zero, 0x169
-    vst $v0, $t3, 0 # Sets a sector of memory to full zeroes
-    sw $t1, $t3, 0 # Loads RCON value a the beginning of v0 in memory
-    vld $v0, $t3, 0 # Loads RCON vector to v0
+    addi $t4, $zero, 0x310 # Assign address to memory for vectory
+    vst $v0, $t4, 0 # Sets a sector of memory to full zeroes
+    addi $t2, $zero, 2 # Shift amount for integer division of 4
+    srl $t1, $t1, $t2 # value //4
+    addi $t2, $zero, 1 # Substract 1
+    sub $t1, $t1, $t2 # Substract 1 from t1
+    addi $t2, $zero, 4 # Multiply by 4
+    mul $t1, $t1, $t2 # Computes RCON offset
+    addi $t1, $t1, 0xB8 # RCON address plus offset
+    lw $t3, $t1, 0 # Loads RCON vector to register t3
+    sw $t3, $t4, 0 # Loads RCON in first value of vector
+    vld $v1, $t4, 0 # Loads RCON as a vector
     j grk_multiple_case3
 
 # Computes the value for w_{i} if the index
 # is a multiple of 4
 grk_multiple_case:
-    addi $t5, $zero, 0x15d # Sets an initial mem address to temp save indexes
+    addi $t5, $zero, 0x304 # Sets an initial mem address to temp save indexes
     sw $t0, $t5, 0 # Stores current index at mem address $t5
     sw $t1, $t5, 4 # Stores final index at mem address $t5 + 4
     sw $t6, $t5, 8 # Stores pc of callee at mem address $t5 + 8
@@ -89,9 +110,6 @@ grk_multiple_case1:
     add $t1, $zero, $zero # Loads a 0 to register t1
     addi $t14, $zero, 0 # Loads condition
     j subValuesInColumn # SubBytes at column in index t0
-
-grk_multiple_case2:
-    j getrconbyindex # Gets an RCON vector an loads it to v0
 
 grk_multiple_case3:
     vset $v1, 0 # Zeroes v1
@@ -168,7 +186,7 @@ mixColumns:
     lw $t3, $t0, 0 # Loads current column to register t3
     sw $t3, $t2, 0 # Stores current column to memory
     vld $v1, $t2, 0 # Brings vector of current column and zeroes
-    vmul $v1, $v0, $v1 # Matrix multiplication of v0 and v1
+    vdot $v1, $v0, $v1 # Matrix multiplication of v0 and v1
     vst $v1, $t2, 0 # Stores resulting vector in memory
     lw $t3, $t2, 0 # Loads result to t3
     sw $t3, $t0, 0 # Replaces current column in memory
