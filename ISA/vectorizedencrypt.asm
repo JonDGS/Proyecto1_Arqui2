@@ -32,9 +32,9 @@ j generateRoundKeys
 loadColumnVector:
     lw $t1, $t0, 0 # Loads columns as scalar to register t1
     vset $v0, 0 # Loads a vector full of zeroes
-    addi $t3, $zero, 0x169 # Loads address for vector to be temporary saved
+    addi $t3, $zero, 0x310 # Loads address for vector to be temporary saved
     vst $v0, $t3, 0 # Stores vector full of zeroes to memory
-    sw $t1, $t3, 0 # Saves columns onto vector located at $ADDR
+    sw $t1, $t3, 0 # Saves columns onto vector located at 0x310
     vld $v0, $t3, 0 # Loads vector back to register v0
     beq $t14, $zero, grk_multiple_case4 # Assumes callee is grk_multiple_case3
     addi $t13, $zero, 1 # Loads a 1 to t13
@@ -112,8 +112,6 @@ grk_multiple_case1:
     j subValuesInColumn # SubBytes at column in index t0
 
 grk_multiple_case3:
-    vset $v1, 0 # Zeroes v1
-    vadd $v1, $v0, $v1 # Copy contents of v0 to v1
     addi $t0, $t0, -4 # Gets index for w_{-4}
     addi $t14, $zero, 0 # Loads 0 to t14
     j loadColumnVector # Computes w_{-4} to v0
@@ -128,7 +126,7 @@ grk_multiple_case4:
 grk_multiple_case5:
     vxor $v3, $v2, $v0 # Computes v0 xor v2 (w-4 xor wi)
     vxor $v3, $v3, $v1 # Computes v3 xor v1 (v3 xor rcon)
-    addi $t0, $zero, 0x169 # Computes memory address for v3
+    addi $t0, $zero, 0x310 # Computes memory address for v3
     vst $v3, $t0, 0 # Store v3 in memory
     lw $t2, $t0, 0 # Loads first column in v3 which is on memory
     lw $t0, $t5, 0 # Restores original value of t0
@@ -139,7 +137,7 @@ grk_multiple_case5:
     j generateRoundKey # Returns to generateRoundKey
 
 grk_default_case:
-    addi $t5, $zero, 0x15d # Sets an initial mem address to temp save indexes
+    addi $t5, $zero, 0x304 # Sets an initial mem address to temp save indexes
     sw $t0, $t5, 0 # Stores current index at mem address $t5
     sw $t1, $t5, 4 # Stores final index at mem address $t5 + 4
     sw $t6, $t5, 8 # Stores pc of callee at mem address $t5 + 8
@@ -157,7 +155,7 @@ grk_default_case1:
 
 grk_default_case2:
     vxor $v0, $v0, $v1 # Computes v0 xor v1 (w-4 xor w-1)
-    addi $t0, $zero, 0x169 # Computes memory address for v3
+    addi $t0, $zero, 0x310 # Computes memory address for v3
     vst $v0, $t0, 0 # Store v0 in memory
     lw $t2, $t0, 0 # Loads first column in v0 which is on memory
     lw $t0, $t5, 0 # Restores original value of t0
@@ -181,7 +179,7 @@ mixColumns:
     addi $t1, $zero, 0x63 # Loads address for matrix
     vld $v0, $t1, 0 # Loads matrix to register v1
     vset $v1, 0 # Zeroes v1
-    addi $t2, $zero, 0x169 # Loads address in memory to be used temporarily
+    addi $t2, $zero, 0x310 # Loads address in memory to be used temporarily
     vst $v1, $t2, 0 # Stores zeroed vector to memory
     lw $t3, $t0, 0 # Loads current column to register t3
     sw $t3, $t2, 0 # Stores current column to memory
