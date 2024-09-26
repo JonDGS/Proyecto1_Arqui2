@@ -83,3 +83,21 @@ def storeVector(type, vector, index):
             state = vector
         case _:
             return ValueError
+        
+def restartMemory():
+    global registers, vregisters, keyschedule, state
+    registers = [
+        0 for i in range(10)
+    ]
+
+    vregisters = [
+        [0 for i in range (32)] for i in range(10)
+    ]
+
+    keyschedule = [
+        [0 for i in range(4)] for i in range(44)
+    ]
+
+    state = [
+        0 for _ in range(16)
+    ]
