@@ -43,7 +43,7 @@ subValueAtIndex:
     addi $t3, $zero, 0xF # Loads 0xF mask to t3
     and $t3, $t1, $t3 # Computes t1 % 16 using mask
     addi $t4, $zero, 15 # Loads row amounts for S_BOX
-    mul $t2, $t2 # Computes row * rowNumbers for S_BOX
+    mul $t2, $t2, $t4 # Computes row * rowNumbers for S_BOX
     add $t2, $t2, $t3 # Computes t2 + t3 for index in S_BOX
     lw $t2, $t1, 0 # loads value to replace
     sw $t2, $t0, 0 # Stores value to index in memory

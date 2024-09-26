@@ -56,11 +56,12 @@ loadColumnVector:
 # the corresponding value in the S_BOX
 subValueAtIndex:
     lw $t1, $t0, 0 # Loads value at memory address
-    srl $t2, $t1, 4 # Shifts value at t1 to get t1 // 16
+    addi $t9, $t9,4
+    srl $t2, $t1, $t9 # Shifts value at t1 to get t1 // 16
     addi $t3, $zero, 0xF # Loads 0xF mask to t3
     and $t3, $t1, $t3 # Computes t1 % 16 using mask
     addi $t4, $zero, 15 # Loads row amounts for S_BOX
-    mul $t2, $t2 # Computes row * rowNumbers for S_BOX
+    mul $t2, $t2, $t4 # Computes row * rowNumbers for S_BOX
     add $t2, $t2, $t3 # Computes t2 + t3 for index in S_BOX
     lw $t2, $t1, 0 # loads value to replace
     sw $t2, $t0, 0 # Stores value to index in memory
@@ -87,7 +88,7 @@ subValuesInColumn2:
 # Assume the index for the RCON column is at t0
 getrconbyindex:
     lw $t1, $t0, 0 # Loads RCON value at t0
-    vset $v0, $zero # Loads v1 with a vector full of zeroes
+    vset $v0, 0 # Loads v1 with a vector full of zeroes
     addi $t4, $zero, 0x310 # Assign address to memory for vectory
     vst $v0, $t4, 0 # Sets a sector of memory to full zeroes
     addi $t2, $zero, 2 # Shift amount for integer division of 4
