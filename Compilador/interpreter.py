@@ -76,7 +76,7 @@ def get_binary(instructions: list, labels: dict) -> list:
     bin_instr = []
     for i, instr in enumerate(instructions):
         mnemonic = instr[0]
-        
+        print(i)
         try:
             instr_type = isa[mnemonic]['type']
             
@@ -214,8 +214,11 @@ def codec_imm(imm, labels):
 
 def branch_imm(index, label, labels):
     try:
+        
         b_dest = labels[label]
+        #print(b_dest)
         imm = b_dest - (index + 1)
+        #print(imm)
         return to_bin(imm, IMM_SIZE)
 
     except KeyError:

@@ -1,7 +1,6 @@
-# mlp
-# comentario version 1.1.0
-inicio:
-    addi $t1, $t1, 0x2 # comentario
-    addi $t2, $t2, 1
-    add $t0, $t2, $t1
-    sub $t4, $t2, $t0
+addi $t0,$zero,0x8888
+addi $t1,$zero, 0x100
+sw $t1, $t0 ,0
+addi $t0, $t0,0x0ABA
+addi $t1, $t1 0x100
+sw $t1, $t0,4
