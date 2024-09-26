@@ -52,8 +52,9 @@ def generateKeySchedule():
 
 #Adds the round key to a given state
 def addRoundKey(state, round):
+    maxRounds = int(len(memory.keyschedule)/4)-1
     for i in range(4):
-        keyScheduleColumn = numpy.array(memory.keyschedule[round*4 + i])
+        keyScheduleColumn = numpy.array(memory.keyschedule[(maxRounds-round)*4 + i])
         state[(i*4):(i*4+4)] = numpy.bitwise_xor(numpy.array(state[(i*4):(i*4+4)]),
                                                         keyScheduleColumn).tolist()
     return state
@@ -114,3 +115,6 @@ def aesDecrypt():
         if round >= 10:
             memory.state = mixColumns(memory.state)
         memory.state = addRoundKey(memory.state, round)
+
+aesDecrypt()
+print(memory.state)

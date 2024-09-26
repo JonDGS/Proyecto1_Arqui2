@@ -99,3 +99,6 @@ def aesEncrypt():
         if round >= 10:
             memory.state = mixColumns(memory.state)
         memory.state = addRoundKey(memory.state, round)
+
+aesEncrypt()
+print(memory.state)

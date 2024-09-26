@@ -58,11 +58,10 @@ def generateKeySchedule():
 
 #Adds the round key to a given state
 def addRoundKey(state, round):
+    maxRounds = int(len(memory.keyschedule)/4)-1
     for i in range(4):
         for j in range(4):
-            temp1 = state[j*4 + i]
-            temp2 = memory.keyschedule[j + round*4][i]
-            state[j*4 + i] = state[j*4 + i] ^ memory.keyschedule[j + round*4][i]
+            state[j*4 + i] = state[j*4 + i] ^ memory.keyschedule[j + (maxRounds - round)*4][i]
     return state
 
 #Substitutes the values on a state
@@ -123,3 +122,6 @@ def aesDecrypt():
         if round >= 10:
             memory.state = mixColumns(memory.state)
         memory.state = addRoundKey(memory.state, round)
+
+aesDecrypt()
+print(memory.state)
