@@ -1,6 +1,12 @@
 start $zero
 j generateRoundKeys
 
+# Address
+# RCON: 0xB8
+# DATA: 0x844
+# Text: 0xE88
+# MatrixTranspose: 0xF8
+
 # Rotate values from index to index + 4
 # CHECK ADDRESSES BEFORE DEPLOYING
 rotateColumn:
@@ -79,7 +85,7 @@ getrconbyindex:
 # Computes the value for w_{i} if the index
 # is a multiple of 4
 grk_multiple_case:
-    addi $t5, $zero, 0x304 # Sets an initial mem address to temp save indexes
+    addi $t5, $zero, 0x844 # Sets an initial mem address to temp save indexes
     sw $t0, $t5, 0 # Stores current index at mem address $t5
     sw $t1, $t5, 4 # Stores final index at mem address $t5 + 4
     lw $t1, $t0, -4 # Loads previous column in current index (copy w{-1} to t1)
@@ -139,7 +145,7 @@ grk_multiple_case2:
     j generateRoundKey # Returns to generateRoundKey
 
 grk_default_case:
-    addi $t5, $zero, 0x304 # Sets an initial mem address to temp save indexes
+    addi $t5, $zero, 0x844 # Sets an initial mem address to temp save indexes
     sw $t0, $t5, 0 # Stores current index at mem address $t5
     sw $t1, $t5, 4 # Stores final index at mem address $t5 + 4
     sw $t6, $t5, 8 # Stores pc of callee at mem address $t5 + 8
@@ -200,7 +206,7 @@ generateRoundKey:
 
 # Mixes the columns with the Matrix in memory
 mixColumns:
-    addi $t0, $zero, 0x948 # Loads address of state
+    addi $t0, $zero, 0xE88 # Loads address of state
     addi $t1, $zero, 0xF8 # Loads address for matrix
     addi $t14, $zero, 0 # Register for element results
     addi $t11, $zero, 0 # Register for column results
@@ -376,7 +382,7 @@ cest_fini:
 
 # Assumes t0 holds the round index, and t1 holds 11 (11 rounds)
 round_Loop:
-    addi $t3, $zero, 0x304 # First address in DATA
+    addi $t3, $zero, 0x844 # First address in DATA
     lw $t0, $t3, 0 # Restores value of index round
     lw $t1, $t3, 4 # Restores value of max rounds
     blt $t0, $t1, cest_fini
@@ -403,7 +409,7 @@ round_Loop3:
 
 round_Loop4:
     #Rotate 2nd row
-    addi $t8, $zero, 0x304 # Loads initial address of state
+    addi $t8, $zero, 0x844 # Loads initial address of state
     addi $t9, $zero, 16 # Loads 16 for shifts
     addi $t10, $zero 0xFF # Loads mask
     lw $t0, $t8, 0 # Loads column
@@ -511,7 +517,7 @@ round_Loop4:
     sw $t1, $t8, 4 # Saves second column result
     sw $t2, $t8, 8 # Saves third column result
     sw $t3, $t8, 12 # Saves fourth column result
-    addi $t3, $zero, 0x304 # First address in DATA
+    addi $t3, $zero, 0x844 # First address in DATA
     lw $t0, $t3, 0 # Restores value of index round
     lw $t1, $t3, 4 # Restores value of max rounds
     blt $t0, $t1, mixColumns # If round less than 10, mix columns
@@ -524,14 +530,14 @@ addRoundKey:
     add $t8, $zero, $t1 # Copies round index to t8
     mul $t3, $t3, $t1 # Computes round*4
     addi $t3, $t3, 0x0 # Computes the address of the first column of round key
-    lw $t0, $zero, 0x304 # Stores first column of state to t0
+    lw $t0, $zero, 0x844 # Stores first column of state to t0
     lw $t1, $t3, 0 # Stores first column of corresponding roundkey
     addi $t6, $zero, 24 # Loads shift amount for first elements
     srl $t0, $t0, $t6 # Loads first element of column state using shifts
     srl $t1, $t1, $t6 # Loads first element of column roundkey using shifts
     xor $t4, $t0, $t1 # Computes state[column][0] xor roundkey[column][0]
     sll $t4, $t4, $t6 # Shifts result to first pos
-    lw $t0, $zero, 0x304 # Stores address first column of state to t0
+    lw $t0, $zero, 0x844 # Stores address first column of state to t0
     lw $t1, $t3, 0 # Stores address first column of corresponding roundkey
     addi $t6, $zero, 16 # Loads shift amount for second elements
     addi $t7, $zero, 0xFF # Loads mask for last two bytes
@@ -542,7 +548,7 @@ addRoundKey:
     xor $t5, $t0, $t1 # Computes state[column][1] xor roundkey[column][1]
     sll $t5, $t5, $t6 # Shifts result to second pos
     add $t4, $t5, $t3 # Loads result to final register
-    lw $t0, $zero, 0x304 # Stores address first column of state to t0
+    lw $t0, $zero, 0x844 # Stores address first column of state to t0
     lw $t1, $t3, 0 # Stores address first column of corresponding roundkey
     addi $t6, $zero, 8 # Loads shift amount for second elements
     addi $t7, $zero, 0xFF # Loads mask for last two bytes
@@ -553,17 +559,17 @@ addRoundKey:
     xor $t5, $t0, $t1 # Computes state[column][2] xor roundkey[column][2]
     sll $t5, $t5, $t6 # Shifts result to second pos
     add $t4, $t5, $t3 # Loads result to final register
-    lw $t0, $zero, 0x304 # Stores address first column of state to t0
+    lw $t0, $zero, 0x844 # Stores address first column of state to t0
     lw $t1, $t3, 0 # Stores address first column of corresponding roundkey
     addi $t7, $zero, 0xFF # Loads mask for last two bytes
     and $t0, $t0, $t7 # Loads only las two bytes
     and $t1, $t0, $t7 # Loads only las two bytes
     xor $t5, $t0, $t1 # Computes state[column][3] xor roundkey[column][3]
     add $t4, $t5, $t3 # Loads result to final register
-    addi $t0, $zero, 0x304 # Loads starting address of state
+    addi $t0, $zero, 0x844 # Loads starting address of state
     sw $t4, $t0, 0 # Stores result of key
     # Start computing second column
-    lw $t0, $zero, 0x304 # Stores address first column of state to t0
+    lw $t0, $zero, 0x844 # Stores address first column of state to t0
     lw $t1, $t3, 0 # Stores address first column of corresponding roundkey
     addi $t0, $t0, 4 # Address of second column
     addi $t1, $t1, 4 # Address of second column
@@ -573,7 +579,7 @@ addRoundKey:
     srl $t1, $t1, $t6 # Loads first element of column roundkey using shifts
     xor $t4, $t0, $t1 # Computes state[column][0] xor roundkey[column][0]
     sll $t4, $t4, $t6 # Shifts result to first pos
-    lw $t0, $zero, 0x304 # Stores address first column of state to t0
+    lw $t0, $zero, 0x844 # Stores address first column of state to t0
     lw $t1, $t3, 0 # Stores address first column of corresponding roundkey
     addi $t6, $zero, 16 # Loads shift amount for second elements
     addi $t7, $zero, 0xFF # Loads mask for last two bytes
@@ -584,7 +590,7 @@ addRoundKey:
     xor $t5, $t0, $t1 # Computes state[column][1] xor roundkey[column][1]
     sll $t5, $t5, $t6 # Shifts result to second pos
     add $t4, $t5, $t3 # Loads result to final register
-    lw $t0, $zero, 0x304 # Stores address first column of state to t0
+    lw $t0, $zero, 0x844 # Stores address first column of state to t0
     lw $t1, $t3, 0 # Stores address first column of corresponding roundkey
     addi $t6, $zero, 8 # Loads shift amount for second elements
     addi $t7, $zero, 0xFF # Loads mask for last two bytes
@@ -595,18 +601,18 @@ addRoundKey:
     xor $t5, $t0, $t1 # Computes state[column][2] xor roundkey[column][2]
     sll $t5, $t5, $t6 # Shifts result to second pos
     add $t4, $t5, $t3 # Loads result to final register
-    lw $t0, $zero, 0x304 # Stores address first column of state to t0
+    lw $t0, $zero, 0x844 # Stores address first column of state to t0
     lw $t1, $t3, 0 # Stores address first column of corresponding roundkey
     addi $t7, $zero, 0xFF # Loads mask for last two bytes
     and $t0, $t0, $t7 # Loads only las two bytes
     and $t1, $t0, $t7 # Loads only las two bytes
     xor $t5, $t0, $t1 # Computes state[column][3] xor roundkey[column][3]
     add $t4, $t5, $t3 # Loads result to final register
-    addi $t0, $zero, 0x304 # Loads starting address of state
+    addi $t0, $zero, 0x844 # Loads starting address of state
     addi $t0, $zero, 4 # Loads address of second column in state
     sw $t4, $t0, 0 # Stores result of key
     # Start computing third column
-    lw $t0, $zero, 0x304 # Stores address first column of state to t0
+    lw $t0, $zero, 0x844 # Stores address first column of state to t0
     lw $t1, $t3, 0 # Stores address first column of corresponding roundkey
     addi $t0, $t0, 8 # Address of second column
     addi $t1, $t1, 8 # Address of second column
@@ -616,7 +622,7 @@ addRoundKey:
     srl $t1, $t1, $t6 # Loads first element of column roundkey using shifts
     xor $t4, $t0, $t1 # Computes state[column][0] xor roundkey[column][0]
     sll $t4, $t4, $t6 # Shifts result to first pos
-    lw $t0, $zero, 0x304 # Stores address first column of state to t0
+    lw $t0, $zero, 0x844 # Stores address first column of state to t0
     lw $t1, $t3, 0 # Stores address first column of corresponding roundkey
     addi $t6, $zero, 16 # Loads shift amount for second elements
     addi $t7, $zero, 0xFF # Loads mask for last two bytes
@@ -627,7 +633,7 @@ addRoundKey:
     xor $t5, $t0, $t1 # Computes state[column][1] xor roundkey[column][1]
     sll $t5, $t5, $t6 # Shifts result to second pos
     add $t4, $t5, $t3 # Loads result to final register
-    lw $t0, $zero, 0x304 # Stores address first column of state to t0
+    lw $t0, $zero, 0x844 # Stores address first column of state to t0
     lw $t1, $t3, 0 # Stores address first column of corresponding roundkey
     addi $t6, $zero, 8 # Loads shift amount for second elements
     addi $t7, $zero, 0xFF # Loads mask for last two bytes
@@ -638,18 +644,18 @@ addRoundKey:
     xor $t5, $t0, $t1 # Computes state[column][2] xor roundkey[column][2]
     sll $t5, $t5, $t6 # Shifts result to second pos
     add $t4, $t5, $t3 # Loads result to final register
-    lw $t0, $zero, 0x304 # Stores address first column of state to t0
+    lw $t0, $zero, 0x844 # Stores address first column of state to t0
     lw $t1, $t3, 0 # Stores address first column of corresponding roundkey
     addi $t7, $zero, 0xFF # Loads mask for last two bytes
     and $t0, $t0, $t7 # Loads only las two bytes
     and $t1, $t0, $t7 # Loads only las two bytes
     xor $t5, $t0, $t1 # Computes state[column][3] xor roundkey[column][3]
     add $t4, $t5, $t3 # Loads result to final register
-    addi $t0, $zero, 0x304 # Loads starting address of state
+    addi $t0, $zero, 0x844 # Loads starting address of state
     addi $t0, $zero, 8 # Loads address of second column in state
     sw $t4, $t0, 0 # Stores result of key
     # Start computing fourth column
-    lw $t0, $zero, 0x304 # Stores address first column of state to t0
+    lw $t0, $zero, 0x844 # Stores address first column of state to t0
     lw $t1, $t3, 0 # Stores address first column of corresponding roundkey
     addi $t0, $t0, 12 # Address of second column
     addi $t1, $t1, 12 # Address of second column
@@ -659,7 +665,7 @@ addRoundKey:
     srl $t1, $t1, $t6 # Loads first element of column roundkey using shifts
     xor $t4, $t0, $t1 # Computes state[column][0] xor roundkey[column][0]
     sll $t4, $t4, $t6 # Shifts result to first pos
-    lw $t0, $zero, 0x304 # Stores address first column of state to t0
+    lw $t0, $zero, 0x844 # Stores address first column of state to t0
     lw $t1, $t3, 0 # Stores address first column of corresponding roundkey
     addi $t6, $zero, 16 # Loads shift amount for second elements
     addi $t7, $zero, 0xFF # Loads mask for last two bytes
@@ -670,7 +676,7 @@ addRoundKey:
     xor $t5, $t0, $t1 # Computes state[column][1] xor roundkey[column][1]
     sll $t5, $t5, $t6 # Shifts result to second pos
     add $t4, $t5, $t3 # Loads result to final register
-    lw $t0, $zero, 0x304 # Stores address first column of state to t0
+    lw $t0, $zero, 0x844 # Stores address first column of state to t0
     lw $t1, $t3, 0 # Stores address first column of corresponding roundkey
     addi $t6, $zero, 8 # Loads shift amount for second elements
     addi $t7, $zero, 0xFF # Loads mask for last two bytes
@@ -681,14 +687,14 @@ addRoundKey:
     xor $t5, $t0, $t1 # Computes state[column][2] xor roundkey[column][2]
     sll $t5, $t5, $t6 # Shifts result to second pos
     add $t4, $t5, $t3 # Loads result to final register
-    lw $t0, $zero, 0x304 # Stores address first column of state to t0
+    lw $t0, $zero, 0x844 # Stores address first column of state to t0
     lw $t1, $t3, 0 # Stores address first column of corresponding roundkey
     addi $t7, $zero, 0xFF # Loads mask for last two bytes
     and $t0, $t0, $t7 # Loads only las two bytes
     and $t1, $t0, $t7 # Loads only las two bytes
     xor $t5, $t0, $t1 # Computes state[column][3] xor roundkey[column][3]
     add $t4, $t5, $t3 # Loads result to final register
-    addi $t0, $zero, 0x304 # Loads starting address of state
+    addi $t0, $zero, 0x844 # Loads starting address of state
     addi $t0, $zero, 12 # Loads address of second column in state
     sw $t4, $t0, 0 # Stores result of key
     j round_Loop
@@ -698,7 +704,7 @@ addRoundKey:
 encrypt:
     addi $t0, $zero, 1 # Loads counter for rounds
     addi $t1, $zero, 11 # Loads max rounds
-    addi $t2, $zero, 0x304
+    addi $t2, $zero, 0x844
     sw $t0, $t2, 0
     sw $t1, $t2, 4
     add $t1, $t0, $zero # Copies round to t1

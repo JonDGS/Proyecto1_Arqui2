@@ -1,6 +1,13 @@
 start $zero
 j generateRoundKeys
 
+# Address
+# RCON: 0xB8
+# DATA: 0x844
+# Text: 0xE88
+# Matrix: 0xE4
+
+
 # Rotate values from index to index + 4
 # CHECK ADDRESSES BEFORE DEPLOYING
 rotateColumn:
@@ -98,7 +105,7 @@ getrconbyindex:
 # Computes the value for w_{i} if the index
 # is a multiple of 4
 grk_multiple_case:
-    addi $t5, $zero, 0x304 # Sets an initial mem address to temp save indexes
+    addi $t5, $zero, 0x844 # Sets an initial mem address to temp save indexes
     sw $t0, $t5, 0 # Stores current index at mem address $t5
     sw $t1, $t5, 4 # Stores final index at mem address $t5 + 4
     sw $t6, $t5, 8 # Stores pc of callee at mem address $t5 + 8
@@ -138,7 +145,7 @@ grk_multiple_case5:
     j generateRoundKey # Returns to generateRoundKey
 
 grk_default_case:
-    addi $t5, $zero, 0x304 # Sets an initial mem address to temp save indexes
+    addi $t5, $zero, 0x844 # Sets an initial mem address to temp save indexes
     sw $t0, $t5, 0 # Stores current index at mem address $t5
     sw $t1, $t5, 4 # Stores final index at mem address $t5 + 4
     sw $t6, $t5, 8 # Stores pc of callee at mem address $t5 + 8
@@ -215,7 +222,7 @@ round_Loop3:
 
 round_Loop4:
     #Rotate 2nd row
-    addi $t8, $zero, 0x304 # Loads initial address of state
+    addi $t8, $zero, 0x844 # Loads initial address of state
     addi $t9, $zero, 16 # Loads 16 for shifts
     addi $t10, $zero 0xFF # Loads mask
     lw $t0, $t8, 0 # Loads column
@@ -323,7 +330,7 @@ round_Loop4:
     sw $t1, $t8, 4 # Saves second column result
     sw $t2, $t8, 8 # Saves third column result
     sw $t3, $t8, 12 # Saves fourth column result
-    addi $t3, $zero, 0x304 # First address in DATA
+    addi $t3, $zero, 0x844 # First address in DATA
     lw $t0, $t3, 0 # Restores value of index round
     lw $t1, $t3, 4 # Restores value of max rounds
     blt $t0, $t1, mixColumns # If round less than 10, mix columns
@@ -333,7 +340,7 @@ round_Loop5:
     addi $t2, $zero, 16 # Loads 16 to memory
     mul $t2, $t2, $t0 # Computes round key address
     vld $v1, $t0, 0 # Loads round key to v0
-    addi $t4, $zero, 0x948 # Loads memory address of state
+    addi $t4, $zero, 0xE88 # Loads memory address of state
     vld $v2, $t4, 0 # Loads state to register v2
     vxor $v2, $v2, $v1 # Computes roundkey xor state
     addi $t0, $t0, 1 # Increases round by 1
@@ -342,7 +349,7 @@ round_Loop5:
 
 # Given a text and keyschedule, encrypt a text
 encrypt:
-    lw $t0, $zero, 0x948 # Saves state memory address to t0
+    lw $t0, $zero, 0xE88 # Saves state memory address to t0
     vld $v0, $t0, 0 # Loads state as a vector to v0
     lw $t0 $zero, 0x0 # Saves keySchedule address
     addi $t0, $t0, 16 # Computes address for first round in key schedule
