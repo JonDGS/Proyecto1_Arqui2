@@ -24,7 +24,7 @@ SHIFTLL = 'sll'         #shift left logical (R)
 SHIFTRL = 'srl'         #shift right logical (R)
 XOR = 'xor'             #xor logico (R)
 AND = 'and'             #and logico (R)
-MULT = 'mult'           #multiplicacion (R)
+MULT = 'mul'           #multiplicacion (R)
 
 BETO = 'beq'            #branch equal (I)
 BLT = 'blt'             #branch less than (I)
@@ -37,7 +37,7 @@ JMP = 'j'               #salto (J)
 VSET = 'vset'           #set vectorial (I)
 VADD = 'vadd'           #suma vectorial (R)
 VMUL = 'vmult'          #multiplicacion vectorial (R)
-VSUM = 'vsum'           #sumatoria vectorial (R)
+VDOT = 'vdot'           #producto punto (R)
 
 #sin estructura
 VSHIFTLL = 'vsll'       #shift left logical vectorial (R)
@@ -53,8 +53,8 @@ isa = {
     #con listo me refiero a que estan referenciados en interpreter.py 
     # pero no necesariamente listos a nivel de funcionalidad
     # Control
-    START: {'type': None, 'opcode': '110010'},
-    END: {'type': None, 'opcode': '110001'},
+    START: {'type': None, 'opcode': '110010'}, # trad / listo
+    END: {'type': None, 'opcode': '110001'}, # trad / listo 
     
     # Escalares
 
@@ -64,30 +64,30 @@ isa = {
      
 
     #sin estructura
-    SHIFTLL : {'type': R, 'opcode': '000000', 'funct': '100000'},  
-    SHIFTRL: {'type': R, 'opcode': '000000', 'funct': '100000'},  
-    XOR: {'type': R, 'opcode': '000000', 'funct': '100000'},  
-    AND: {'type': R, 'opcode': '000000', 'funct': '100000'},  #  / listo
-    MULT: {'type': R, 'opcode': '000000', 'funct': '100000'}, #  / listo
+    SHIFTLL : {'type': R, 'opcode': '000000', 'funct': '000101'}, # trad  / listo
+    SHIFTRL: {'type': R, 'opcode': '000000', 'funct': '000111'},  # trad / listo
+    XOR: {'type': R, 'opcode': '000000', 'funct': '000010'},  # trad / listo
+    AND: {'type': R, 'opcode': '000000', 'funct': '000011'},  #  trad / listo
+    MULT: {'type': R, 'opcode': '000000', 'funct': '001000'}, #  trad / listo
 
     BETO: {'type': I, 'opcode': '100000'}, #trad / listo
     BLT: {'type': I, 'opcode': '100001'}, #trad / listo
     STW: {'type': I, 'opcode': '010001'}, #trad / listo
     LDW: {'type': I, 'opcode': '010010'}, #trad / listo
-    JMP: {'type': J, 'opcode': '100010'}, #trad 
+    JMP: {'type': J, 'opcode': '100010'}, #trad / listo
 
     # Vectoriales
 
-    VSET: {'type': I, 'opcode': '010100'},
+    VSET: {'type': I, 'opcode': '111111'}, # trad / listo
     VADD: {'type': R, 'opcode': '001100', 'funct': '000000'}, #trad / listo
     VMUL: {'type': R, 'opcode': '001100', 'funct': '000010'}, #trad / listo
-    VSUM: {'type': R, 'opcode': '010100', 'funct': '100000'}, 
+    VDOT: {'type': R, 'opcode': '001100', 'funct': '110000'}, # trad / listo
 
     #sin estructura
-    VSHIFTLL: {'type': R, 'opcode': '010100', 'funct': '100000'},
-    VSHIFTRL: {'type': R, 'opcode': '010100', 'funct': '100000'},
-    VXOR: {'type': R, 'opcode': '010100', 'funct': '100000'}, #  / listo
-    VAND: {'type': R, 'opcode': '010100', 'funct': '100000'}, #  / listo
+    VSHIFTLL: {'type': R, 'opcode': '001100', 'funct': '100000'}, # / listo
+    VSHIFTRL: {'type': R, 'opcode': '001100', 'funct': '100000'}, # / listo
+    VXOR: {'type': R, 'opcode': '001100', 'funct': '100000'}, #  / listo
+    VAND: {'type': R, 'opcode': '001100', 'funct': '100000'}, #  / listo
 
     VST: {'type': I, 'opcode': '011101'}, #trad / listo
     VLD: {'type': I, 'opcode': '011110'}, #trad / listo

@@ -76,7 +76,7 @@ def get_binary(instructions: list, labels: dict) -> list:
     bin_instr = []
     for i, instr in enumerate(instructions):
         mnemonic = instr[0]
-        print(i)
+        print(str(i) + mnemonic)
         try:
             instr_type = isa[mnemonic]['type']
             
@@ -113,11 +113,23 @@ def get_r_type(instruction: list) -> str:
     """
     Transforms R type instruction to binary
     """
+
     mnemonic = instruction[0]
+
     opcode = isa[mnemonic]['opcode']
+
     funct = isa[mnemonic]['funct']
 
-    if (mnemonic == ADD or SUB or MULT or AND):
+
+    
+    if (mnemonic == VDOT):
+        print('c')
+        rd = get_register(instruction[1])
+        rs = get_register(instruction[2])
+        rt = get_register(instruction[3])
+        shamt = '00000'
+
+    if (mnemonic == ADD or SUB or MULT or AND or XOR):
         rd = get_register(instruction[1])
         rs = get_register(instruction[2])
         rt = get_register(instruction[3])
@@ -130,13 +142,30 @@ def get_r_type(instruction: list) -> str:
         shamt = '00000'
 
 
-    '''
-    if (mnemonic == SLL or mnemonic == SRL):
+    if (mnemonic == SHIFTLL):
         rd = get_register(instruction[1])
         rs = get_register(instruction[2])
         rt = '0000'
-        shamt = to_bin(instruction[3], 5)
-    '''
+        shamt = get_register(instruction[3])
+
+    if (mnemonic == SHIFTRL):
+        rd = get_register(instruction[1])
+        rs = get_register(instruction[2])
+        rt = '0000'
+        shamt = get_register(instruction[3])
+
+    if (mnemonic == VSHIFTLL):
+        rd = get_register(instruction[1])
+        rs = get_register(instruction[2])
+        rt = '0000'
+        shamt = get_register(instruction[3])
+
+    if (mnemonic == VSHIFTRL):
+        rd = get_register(instruction[1])
+        rs = get_register(instruction[2])
+        rt = '0000'
+        shamt = get_register(instruction[3])
+    
     print("R opcode:", opcode, " rs:", rs, " rt:", rt, " rd:", rd, " shamt:", shamt, " funct:", funct)
     print("R opcode:", len(opcode), " rs:", len(rs), " rt:", len(rt), " rd:", len(rd), " shamt:", len(shamt), " funct:", len(funct))
     return opcode + rs + rt + rd + shamt + funct
@@ -170,15 +199,30 @@ def get_i_type(i: int, instruction: list, labels: dict) -> str:
         rt = get_register(instruction[2])
         imm = branch_imm(i, instruction[3], labels)
 
-    if (mnemonic == STW or LDW):
+    if (mnemonic == STW):
         rt = get_register(instruction[1])
         rs = get_register(instruction[2])
         imm = codec_imm(instruction[3], labels)
 
-    if (mnemonic == VST or VLD):
+    if (mnemonic == LDW):
         rt = get_register(instruction[1])
         rs = get_register(instruction[2])
         imm = codec_imm(instruction[3], labels)
+
+    if (mnemonic == VST):
+        rt = get_register(instruction[1])
+        rs = get_register(instruction[2])
+        imm = codec_imm(instruction[3], labels)
+
+    if (mnemonic == VLD):
+        rt = get_register(instruction[1])
+        rs = get_register(instruction[2])
+        imm = codec_imm(instruction[3], labels)
+
+    if (mnemonic == VSET):
+        rt = get_register(instruction[1])
+        rs = get_register(instruction[1])
+        imm = codec_imm(instruction[2], labels)
 
     print("I opcode:", opcode, " rs:", rs, " imm:", imm)
     print("I opcode:", len(opcode), " rs:", len(rs), " imm:", len(imm))
