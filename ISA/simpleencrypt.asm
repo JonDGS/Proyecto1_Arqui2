@@ -6,12 +6,12 @@ j generateRoundKeys
 rotateColumn:
     lw $t0, $t0, 0 
     addi $t5, $zero, 0xFF
-    addi $t6. $zero, 24
+    addi $t6, $zero, 24
     srl $t1, $t0, $t6 # Loads column[0]
-    addi $t6. $zero, 16
+    addi $t6, $zero, 16
     srl $t2, $t0, $t6 # Loads column[1]
     and $t2, $t0, $t5 # Loads column[1] after mask
-    addi $t6. $zero, 8
+    addi $t6, $zero, 8
     srl $t3, $t0, $t6 # Loads column[2]
     and $t3, $t0, $t5 # Loads column[2] after mask
     and $t4, $t0, $t5 # Loads column[3] after mask
