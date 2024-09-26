@@ -40,68 +40,89 @@ def write_mif_file(file_name):
         f.write("DATA_RADIX = HEX;\n\n")
         f.write("CONTENT BEGIN\n")
 
-        # Write the key at address range 0x0 to 0x10
-        for i, value in enumerate(formatted_key):
-            f.write(f"  {i:04X}: {value:08X};\n")
+        address = 0  # Start address
+
+        # Write the key at address range 0 to 16
+        for value in formatted_key:
+            f.write(f"  {address}: {value:08X};\n")
+            address += 4  # Increment address by 4
         
-        # Fill the space between key and R_CON (0x10 to 0xB8)
-        fill_with_zeroes(f, 0x10, 0xB8)
+        # Fill the space between key and R_CON (address 16 to 184)
+        fill_with_zeroes(f, address, 184)
+        address = 184  # Update address
 
-        # Write the R_CON at address range 0xB8 to 0xE0
-        for i, value in enumerate(formatted_rcon):
-            f.write(f"  {0xB8 + i:04X}: {value:08X};\n")
+        # Write the R_CON at address range 184 to 224
+        for value in formatted_rcon:
+            f.write(f"  {address}: {value:08X};\n")
+            address += 4
+        
+        # Fill the space between R_CON and RGF_matrix (address 224 to 228)
+        fill_with_zeroes(f, address, 228)
+        address = 228  # Update address
 
-        # Fill the space between R_CON and RGF_matrix (0xE0 to 0xE4)
-        fill_with_zeroes(f, 0xE0, 0xE4)
+        # Write the RGF_matrix at address range 228 to 244
+        for value in formatted_rgf_matrix:
+            f.write(f"  {address}: {value:08X};\n")
+            address += 4
+        
+        # Fill the space between RGF_matrix and RGF_matrix_transpose (address 244 to 248)
+        fill_with_zeroes(f, address, 248)
+        address = 248  # Update address
 
-        # Write the RGF_matrix at address range 0xE4 to 0xF4
-        for i, value in enumerate(formatted_rgf_matrix):
-            f.write(f"  {0xE4 + i:04X}: {value:08X};\n")
+        # Write the RGF_matrix_transpose at address range 248 to 264
+        for value in formatted_rgf_matrix_transpose:
+            f.write(f"  {address}: {value:08X};\n")
+            address += 4
+        
+        # Fill the space between RGF_matrix_transpose and Inv_RGF_matrix (address 264 to 268)
+        fill_with_zeroes(f, address, 268)
+        address = 268  # Update address
 
-        # Fill the space between RGF_matrix and RGF_matrix_transpose (0xF4 to 0xF8)
-        fill_with_zeroes(f, 0xF4, 0xF8)
+        # Write the Inv_RGF_matrix at address range 268 to 284
+        for value in formatted_inv_rgf_matrix:
+            f.write(f"  {address}: {value:08X};\n")
+            address += 4
+        
+        # Fill the space between Inv_RGF_matrix and Inv_RGF_matrix_transpose (address 284 to 288)
+        fill_with_zeroes(f, address, 288)
+        address = 288  # Update address
 
-        # Write the RGF_matrix_transpose at address range 0xF8 to 0x108
-        for i, value in enumerate(formatted_rgf_matrix_transpose):
-            f.write(f"  {0xF8 + i:04X}: {value:08X};\n")
+        # Write the Inv_RGF_matrix_transpose at address range 288 to 304
+        for value in formatted_inv_rgf_matrix_transpose:
+            f.write(f"  {address}: {value:08X};\n")
+            address += 4
+        
+        # Fill the space between Inv_RGF_matrix_transpose and S_BOX (address 304 to 308)
+        fill_with_zeroes(f, address, 308)
+        address = 308  # Update address
 
-        # Fill the space between RGF_matrix_transpose and Inv_RGF_matrix (0x108 to 0x10C)
-        fill_with_zeroes(f, 0x108, 0x10C)
+        # Write the S_BOX at address range 308 to 1208 (no formatting needed)
+        for row in S_BOX:
+            for value in row:
+                f.write(f"  {address}: {value:08X};\n")
+                address += 4  # Increment address by 4
+        
+        # Fill the space between S_BOX and INV_S_BOX (address 1208 to 1212)
+        fill_with_zeroes(f, address, 1212)
+        address = 1212  # Update address
 
-        # Write the Inv_RGF_matrix at address range 0x10C to 0x11C
-        for i, value in enumerate(formatted_inv_rgf_matrix):
-            f.write(f"  {0x10C + i:04X}: {value:08X};\n")
+        # Write the INV_S_BOX at address range 1212 to 2112 (no formatting needed)
+        for row in INV_S_BOX:
+            for value in row:
+                f.write(f"  {address}: {value:08X};\n")
+                address += 4  # Increment address by 4
+        
+        # Fill the space between INV_S_BOX and Text (address 2112 to 2116)
+        fill_with_zeroes(f, address, 2116)
+        address = 2116  # Update address
 
-        # Fill the space between Inv_RGF_matrix and Inv_RGF_matrix_transpose (0x11C to 0x120)
-        fill_with_zeroes(f, 0x11C, 0x120)
-
-        # Write the Inv_RGF_matrix_transpose at address range 0x120 to 0x130
-        for i, value in enumerate(formatted_inv_rgf_matrix_transpose):
-            f.write(f"  {0x120 + i:04X}: {value:08X};\n")
-
-        # Fill the space between Inv_RGF_matrix_transpose and S_BOX (0x130 to 0x134)
-        fill_with_zeroes(f, 0x130, 0x134)
-
-        # Write the S_BOX at address range 0x134 to 0x218 (no formatting needed)
-        for i, row in enumerate(S_BOX):
-            f.write(f"  {0x134 + i:04X}: {''.join(f'{byte:02X}' for byte in row)};\n")
-
-        # Fill the space between S_BOX and INV_S_BOX (0x218 to 0x21C)
-        fill_with_zeroes(f, 0x218, 0x21C)
-
-        # Write the INV_S_BOX at address range 0x21C to 0x300 (no formatting needed)
-        for i, row in enumerate(INV_S_BOX):
-            f.write(f"  {0x21C + i:04X}: {''.join(f'{byte:02X}' for byte in row)};\n")
-
-        # Fill the space between INV_S_BOX and Text (0x300 to 0x948)
-        fill_with_zeroes(f, 0x300, 0x948)
-
-        # Write the text at address range 0x948 to 0x849C
-        for i, value in enumerate(formatted_text):
-            f.write(f"  {0x948 + i:04X}: {value:08X};\n")
+        # Write the text at address range 2116 to 34620
+        for value in formatted_text:
+            f.write(f"  {address}: {value:08X};\n")
+            address += 4  # Increment address by 4
 
         # Fill the remaining space (assumes 0 for unfilled addresses)
-        f.write(f"  [0x849C..{depth - 1}]: 0;\n")
+        fill_with_zeroes(f, address, depth)
 
         f.write("END;\n")
 
