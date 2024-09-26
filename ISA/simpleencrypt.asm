@@ -202,8 +202,8 @@ generateRoundKey:
 mixColumns:
     addi $t0, $zero, 0x948 # Loads address of state
     addi $t1, $zero, 0xF8 # Loads address for matrix
-    addi $t14, $zero, $zero # Register for element results
-    addi $t11, $zero, $zero # Register for column results
+    addi $t14, $zero, 0 # Register for element results
+    addi $t11, $zero, 0 # Register for column results
     # First row in matrix
     # First values
     lw $t2, $t0, 0 # Loads first column of state
