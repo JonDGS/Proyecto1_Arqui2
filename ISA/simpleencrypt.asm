@@ -192,18 +192,173 @@ generateRoundKey:
 
 # Mixes the columns with the Matrix in memory
 mixColumns:
-    addi $t1, $zero, 0x63 # Loads address for matrix
-    vld $v0, $t1, 0 # Loads matrix to register v1
-    vset $v1, 0 # Zeroes v1
-    addi $t2, $zero, 0x169 # Loads address in memory to be used temporarily
-    vst $v1, $t2, 0 # Stores zeroed vector to memory
-    lw $t3, $t0, 0 # Loads current column to register t3
-    sw $t3, $t2, 0 # Stores current column to memory
-    vld $v1, $t2, 0 # Brings vector of current column and zeroes
-    vmul $v1, $v0, $v1 # Matrix multiplication of v0 and v1
-    vst $v1, $t2, 0 # Stores resulting vector in memory
-    lw $t3, $t2, 0 # Loads result to t3
-    sw $t3, $t0, 0 # Replaces current column in memory
+    addi $t0, $zero, 0x948 # Loads address of state
+    addi $t1, $zero, 0xF8 # Loads address for matrix
+    addi $t14, $zero, $zero # Register for element results
+    addi $t11, $zero, $zero # Register for column results
+    # First row in matrix
+    # First values
+    lw $t2, $t0, 0 # Loads first column of state
+    lw $t3, $t1, 0 # Loads first column of matrix
+    addi $t4, $zero, 24 # Shift amount for first pos
+    addi $t5, $zero, 0xFF # Mask
+    srl $t2, $t2, $t4 # Shifts to leave first value at LSB state[0][0]
+    srl $t3, $t3, $t4 # Shifts to leave first value at LSB matrix[0][0]
+    mul $t14, $t2, $t3 # Computes state[0][0]*matrix[0][0]
+    # Second values
+    lw $t2, $t0, 0 # Loads first column of state
+    lw $t3, $t1, 0 # Loads first column of matrix
+    addi $t4, $zero, 16 # Shift amount for second pos
+    srl $t2, $t2, $t4 # Shifts to leave first value at LSB state[0][1]
+    and $t2, $t2, $t5 # Apply mask
+    srl $t3, $t3, $t4 # Shifts to leave first value at LSB matrix[0][1]
+    and $t3, $t3, $t5 # Apply mask
+    mul $t13, $t2, $t3 # Computes state[0][1]*matrix[0][1]
+    add $t14, $t14, $t13 # Computes sum of t13 with t14
+    # Third values
+    lw $t2, $t0, 0 # Loads first column of state
+    lw $t3, $t1, 0 # Loads first column of matrix
+    addi $t4, $zero, 8 # Shift amount for second pos
+    srl $t2, $t2, $t4 # Shifts to leave first value at LSB state[0][2]
+    and $t2, $t2, $t5 # Apply mask
+    srl $t3, $t3, $t4 # Shifts to leave first value at LSB matrix[0][2]
+    and $t3, $t3, $t5 # Apply mask
+    mul $t13, $t2, $t3 # Computes state[0][2]*matrix[0][2]
+    add $t14, $t14, $t13 # Computes sum of t13 with t14
+    # Fourth values
+    lw $t2, $t0, 0 # Loads first column of state
+    lw $t3, $t1, 0 # Loads first column of matrix
+    and $t2, $t2, $t5 # Apply mask for state[0][3]
+    and $t3, $t3, $t5 # Apply mask for matrix[0][3]
+    mul $t13, $t2, $t3 # Computes state[0][3]*matrix[0][3]
+    add $t14, $t14, $t13 # Computes sum of t13 with t14
+    addi $t4, $zero, 16 # Shift for modulo 255
+    srl $t14, $t14, $t4 # Computes modulo 255
+    addi $t4, $zero, 24 # Shift to load at first pos
+    sll $t11, $t14, $t4 # Shifts result to first pos
+    # Second row in matrix
+    # First values
+    lw $t2, $t0, 4 # Loads second column of state
+    lw $t3, $t1, 4 # Loads second column of matrix
+    addi $t4, $zero, 24 # Shift amount for first pos
+    addi $t5, $zero, 0xFF # Mask
+    srl $t2, $t2, $t4 # Shifts to leave second value at LSB state[1][0]
+    srl $t3, $t3, $t4 # Shifts to leave second value at LSB matrix[1][0]
+    mul $t14, $t2, $t3 # Computes state[1][0]*matrix[1][0]
+    # Second values
+    lw $t2, $t0, 4 # Loads second column of state
+    lw $t3, $t1, 4 # Loads second column of matrix
+    addi $t4, $zero, 16 # Shift amount for second pos
+    srl $t2, $t2, $t4 # Shifts to leave second value at LSB state[1][1]
+    and $t2, $t2, $t5 # Apply mask
+    srl $t3, $t3, $t4 # Shifts to leave second value at LSB matrix[1][1]
+    and $t3, $t3, $t5 # Apply mask
+    mul $t13, $t2, $t3 # Computes state[1][1]*matrix[1][1]
+    add $t14, $t14, $t13 # Computes sum of t13 with t14
+    # Third values
+    lw $t2, $t0, 4 # Loads second column of state
+    lw $t3, $t1, 4 # Loads second column of matrix
+    addi $t4, $zero, 8 # Shift amount for second pos
+    srl $t2, $t2, $t4 # Shifts to leave second value at LSB state[1][2]
+    and $t2, $t2, $t5 # Apply mask
+    srl $t3, $t3, $t4 # Shifts to leave second value at LSB matrix[1][2]
+    and $t3, $t3, $t5 # Apply mask
+    mul $t13, $t2, $t3 # Computes state[1][2]*matrix[1][2]
+    add $t14, $t14, $t13 # Computes sum of t13 with t14
+    # Fourth values
+    lw $t2, $t0, 4 # Loads second column of state
+    lw $t3, $t1, 4 # Loads second column of matrix
+    and $t2, $t2, $t5 # Apply mask for state[1][3]
+    and $t3, $t3, $t5 # Apply mask for matrix[1][3]
+    mul $t13, $t2, $t3 # Computes state[1][3]*matrix[1][3]
+    add $t14, $t14, $t13 # Computes sum of t13 with t14
+    addi $t4, $zero, 16 # Shift for modulo 255
+    srl $t14, $t14, $t4 # Computes modulo 255
+    addi $t4, $zero, 24 # Shift to load at first pos
+    sll $t14, $t14, $t4 # Shifts result to first pos
+    add $t11, $t11, $t14 # Adds to resulting vector
+    # Third row in matrix
+    # First values
+    lw $t2, $t0, 8 # Loads first column of state
+    lw $t3, $t1, 8 # Loads first column of matrix
+    addi $t4, $zero, 24 # Shift amount for first pos
+    addi $t5, $zero, 0xFF # Mask
+    srl $t2, $t2, $t4 # Shifts to leave first value at LSB state[2][0]
+    srl $t3, $t3, $t4 # Shifts to leave first value at LSB matrix[2][0]
+    mul $t14, $t2, $t3 # Computes state[2][0]*matrix[2][0]
+    # Second values
+    lw $t2, $t0, 8 # Loads first column of state
+    lw $t3, $t1, 8 # Loads first column of matrix
+    addi $t4, $zero, 16 # Shift amount for second pos
+    srl $t2, $t2, $t4 # Shifts to leave first value at LSB state[2][1]
+    and $t2, $t2, $t5 # Apply mask
+    srl $t3, $t3, $t4 # Shifts to leave first value at LSB matrix[2][1]
+    and $t3, $t3, $t5 # Apply mask
+    mul $t13, $t2, $t3 # Computes state[2][1]*matrix[2]][1]
+    add $t14, $t14, $t13 # Computes sum of t13 with t14
+    # Third values
+    lw $t2, $t0, 8 # Loads first column of state
+    lw $t3, $t1, 8 # Loads first column of matrix
+    addi $t4, $zero, 8 # Shift amount for second pos
+    srl $t2, $t2, $t4 # Shifts to leave first value at LSB state[2][2]
+    and $t2, $t2, $t5 # Apply mask
+    srl $t3, $t3, $t4 # Shifts to leave first value at LSB matrix[2][2]
+    and $t3, $t3, $t5 # Apply mask
+    mul $t13, $t2, $t3 # Computes state[2][2]*matrix[2][2]
+    add $t14, $t14, $t13 # Computes sum of t13 with t14
+    # Fourth values
+    lw $t2, $t0, 8 # Loads first column of state
+    lw $t3, $t1, 8 # Loads first column of matrix
+    and $t2, $t2, $t5 # Apply mask for state[2][3]
+    and $t3, $t3, $t5 # Apply mask for matrix[2][3]
+    mul $t13, $t2, $t3 # Computes state[2][3]*matrix[2][3]
+    add $t14, $t14, $t13 # Computes sum of t13 with t14
+    addi $t4, $zero, 16 # Shift for modulo 255
+    srl $t14, $t14, $t4 # Computes modulo 255
+    addi $t4, $zero, 8 # Shift to load at first pos
+    sll $t14, $t14, $t4 # Shifts result to first pos
+    add $t11, $t14, $t4 # Computes sum of colum result
+    # Fourth row in matrix
+    # First values
+    lw $t2, $t0, 12 # Loads first column of state
+    lw $t3, $t1, 12 # Loads first column of matrix
+    addi $t4, $zero, 24 # Shift amount for first pos
+    addi $t5, $zero, 0xFF # Mask
+    srl $t2, $t2, $t4 # Shifts to leave first value at LSB state[3][0]
+    srl $t3, $t3, $t4 # Shifts to leave first value at LSB matrix[3][0]
+    mul $t14, $t2, $t3 # Computes state[3][0]*matrix[3][0]
+    # Second values
+    lw $t2, $t0, 12 # Loads first column of state
+    lw $t3, $t1, 12 # Loads first column of matrix
+    addi $t4, $zero, 16 # Shift amount for second pos
+    srl $t2, $t2, $t4 # Shifts to leave first value at LSB state[3][1]
+    and $t2, $t2, $t5 # Apply mask
+    srl $t3, $t3, $t4 # Shifts to leave first value at LSB matrix[3][1]
+    and $t3, $t3, $t5 # Apply mask
+    mul $t13, $t2, $t3 # Computes state[3][1]*matrix[3]][1]
+    add $t14, $t14, $t13 # Computes sum of t13 with t14
+    # Third values
+    lw $t2, $t0, 12 # Loads first column of state
+    lw $t3, $t1, 12 # Loads first column of matrix
+    addi $t4, $zero, 8 # Shift amount for second pos
+    srl $t2, $t2, $t4 # Shifts to leave first value at LSB state[3][2]
+    and $t2, $t2, $t5 # Apply mask
+    srl $t3, $t3, $t4 # Shifts to leave first value at LSB matrix[3][2]
+    and $t3, $t3, $t5 # Apply mask
+    mul $t13, $t2, $t3 # Computes state[3][2]*matrix[3][2]
+    add $t14, $t14, $t13 # Computes sum of t13 with t14
+    # Fourth values
+    lw $t2, $t0, 12 # Loads first column of state
+    lw $t3, $t1, 12 # Loads first column of matrix
+    and $t2, $t2, $t5 # Apply mask for state[3][3]
+    and $t3, $t3, $t5 # Apply mask for matrix[3][3]
+    mul $t13, $t2, $t3 # Computes state[3][3]*matrix[3][3]
+    add $t14, $t14, $t13 # Computes sum of t13 with t14
+    addi $t4, $zero, 16 # Shift for modulo 255
+    srl $t14, $t14, $t4 # Computes modulo 255
+    addi $t4, $zero, 0 # Shift to load at first pos
+    sll $t14, $t14, $t4 # Shifts result to first pos
+    add $t11, $t14, $t4 # Computes sum of colum result
     j addRoundKey
 
 
