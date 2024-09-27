@@ -6,6 +6,7 @@ j generateRoundKeys
 # DATA: 0x844
 # Text: 0xE88
 # MatrixTranspose: 0xF8
+# S-Box: 0x134
 
 # Rotate values from index to index + 4
 # CHECK ADDRESSES BEFORE DEPLOYING
@@ -45,6 +46,8 @@ subValueAtIndex:
     addi $t4, $zero, 15 # Loads row amounts for S_BOX
     mul $t2, $t2, $t4 # Computes row * rowNumbers for S_BOX
     add $t2, $t2, $t3 # Computes t2 + t3 for index in S_BOX
+    addi $t4, $zero, 0x134 # Loads address of S-Box
+    add $t2, $t2, $t4 # Sums address of S-Box plus offset
     lw $t2, $t1, 0 # loads value to replace
     sw $t2, $t0, 0 # Stores value to index in memory
     beq $t14, $zero, subValuesInColumn2 # Assuming callee is subValuesInColumn
